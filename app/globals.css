@@ -1,0 +1,341 @@
+@import "tailwindcss";
+
+/* Toll design system: see DESIGN.md. One accent (brass), states only where they mean something. */
+:root {
+  --ground: #08100d;
+  --raised: #0e1814;
+  --ink: #edf3ef;
+  --muted: #94a69d;
+  --hair: rgb(237 243 239 / 0.1);
+  --glass: rgb(196 232 213 / 0.06);
+  --glass-edge: rgb(255 255 255 / 0.13);
+  --brass: #ddb76e;
+  --mint: #8fddb2;
+  --postmark: #e46a50;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: clamp(16px, 4vw, 56px);
+  --radius: 22px;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-ground: var(--ground);
+  --color-raised: var(--raised);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-hair: var(--hair);
+  --color-brass: var(--brass);
+  --color-mint: var(--mint);
+  --color-postmark: var(--postmark);
+  --font-sans: var(--font-manrope);
+  --font-mono: var(--font-martian);
+}
+
+html {
+  background: var(--ground);
+  scrollbar-color: rgb(237 243 239 / 0.18) transparent;
+  scrollbar-width: thin;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-thumb { background: rgb(237 243 239 / 0.16); border-radius: 999px; border: 3px solid var(--ground); }
+::selection { background: rgb(221 183 110 / 0.32); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; border-radius: 8px; }
+
+  /* Component classes live in a layer so Tailwind utilities (text-mint, text-brass) can override them. */
+@layer components {
+  .gutter { padding-inline: var(--gutter); }
+
+  .label {
+    font-family: var(--font-martian), ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .num { font-family: var(--font-martian), ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .display { font-weight: 700; letter-spacing: -0.05em; line-height: 0.95; }
+  .wordmark { font-weight: 800; letter-spacing: -0.06em; line-height: 1; }
+  .hairline { border-color: var(--hair); }
+
+  /* Glass: anything that floats or holds money. A specular highlight (.spec) follows the pointer. */
+  .glass {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.065), rgb(255 255 255 / 0.015)), var(--glass);
+    backdrop-filter: blur(22px) saturate(140%);
+    box-shadow:
+      inset 0 1px 0 var(--glass-edge),
+      inset 0 0 0 1px rgb(255 255 255 / 0.045),
+      0 40px 80px -40px rgb(0 0 0 / 0.7);
+  }
+  .spec {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 520px;
+    height: 520px;
+    margin: -260px 0 0 -260px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(closest-side, rgb(255 255 255 / 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.45s var(--ease);
+  }
+  .glass:hover > .spec { opacity: 1; }
+  .ripple {
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    margin: -120px 0 0 -120px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(closest-side, rgb(255 255 255 / 0.14), transparent);
+    animation: ripple 0.6s var(--ease) forwards;
+  }
+  @keyframes ripple {
+    from { transform: scale(0.4); opacity: 1; }
+    to { transform: scale(1.6); opacity: 0; }
+  }
+
+  /* Buttons: press is instant feedback, hover resolves under 0.2s. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 48px;
+    padding: 0 22px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    transition: transform 0.16s ease-out, background-color 0.18s ease, opacity 0.18s ease;
+    user-select: none;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.4; pointer-events: none; }
+  .btn-brass { background: var(--brass); color: #1b1408; }
+  .btn-ghost { background: rgb(255 255 255 / 0.06); box-shadow: inset 0 0 0 1px var(--hair); color: var(--ink); }
+  .btn-danger { background: rgb(228 106 80 / 0.12); box-shadow: inset 0 0 0 1px rgb(228 106 80 / 0.45); color: var(--postmark); }
+  [data-magnetic] { display: inline-block; will-change: transform; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .btn-brass:hover { background: #e7c681; }
+    .btn-ghost:hover { background: rgb(255 255 255 / 0.1); }
+    .btn-danger:hover { background: rgb(228 106 80 / 0.2); }
+    .link:hover { color: var(--ink); }
+  }
+  .link { color: var(--muted); transition: color 0.18s ease; }
+
+  /* Fields sit inside glass, so their corners are concentric (22 - 8). Inputs stay 16px so iOS never zooms. */
+  .field {
+    width: 100%;
+    font-size: 16px;
+    color: var(--ink);
+    background: rgb(255 255 255 / 0.04);
+    border: 0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: inset 0 0 0 1px var(--hair);
+    transition: box-shadow 0.18s ease, background-color 0.18s ease;
+  }
+  .field::placeholder { color: rgb(148 166 157 / 0.75); }
+  .field:focus { outline: none; background: rgb(255 255 255 / 0.06); box-shadow: inset 0 0 0 1px rgb(221 183 110 / 0.7), 0 0 0 4px rgb(221 183 110 / 0.12); }
+
+  /* Nav gains its surface only after the page scrolls. */
+  .nav {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 40;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-inline: var(--gutter);
+    transition: background-color 0.45s var(--ease), box-shadow 0.45s var(--ease), backdrop-filter 0.45s var(--ease);
+  }
+  .nav[data-solid="true"] {
+    background: rgb(8 16 13 / 0.6);
+    backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: inset 0 -1px 0 var(--hair);
+  }
+
+  /* ---------- The vault: coin behind glass. Sized in em so it scales as one object. ---------- */
+  .vault {
+    position: relative;
+    width: 30em;
+    height: 33em;
+    font-size: clamp(8px, 2.3vw, 16px);
+    user-select: none;
+  }
+  .vault-sm { font-size: clamp(8px, 2.2vw, 11px); }
+  .vault-glow {
+    position: absolute;
+    left: 50%;
+    top: 9em;
+    width: 26em;
+    height: 26em;
+    margin-left: -13em;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(221 183 110 / 0.22), transparent 70%);
+    animation: breathe 7s ease-in-out infinite;
+  }
+  .glow-mint { background: radial-gradient(closest-side, rgb(143 221 178 / 0.24), transparent 70%); opacity: 0; animation: none; transition: opacity 0.9s var(--ease); }
+  .glow-red { background: radial-gradient(closest-side, rgb(228 106 80 / 0.18), transparent 70%); opacity: 0; animation: none; transition: opacity 0.9s var(--ease); }
+  .glow-brass { transition: opacity 0.9s var(--ease); }
+  .vault[data-state="released"] .glow-mint { opacity: 1; }
+  .vault[data-state="spam"] .glow-red, .vault[data-state="charged"] .glow-red { opacity: 1; }
+  .vault[data-state="released"] .glow-brass, .vault[data-state="spam"] .glow-brass, .vault[data-state="charged"] .glow-brass { opacity: 0; animation: none; }
+  .vault[data-story] .coin-wrap, .vault[data-story] .letter, .vault[data-story] .vault-glow, .vault[data-story] .postmark path, .vault[data-story] .postmark circle { transition: none; }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.7; transform: scale(0.97); }
+    50% { opacity: 1; transform: scale(1.03); }
+  }
+  .coin-wrap {
+    position: absolute;
+    left: 50%;
+    top: 4.4em;
+    width: 11em;
+    height: 11em;
+    margin-left: -5.5em;
+    perspective: 40em;
+    transition: transform 0.9s var(--ease), opacity 0.9s var(--ease);
+  }
+  .coin {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at 34% 28%, #f7e2ad 0%, #ddb76e 30%, #a8833f 68%, #6c5222 100%);
+    box-shadow:
+      inset 0 -0.45em 1em rgb(0 0 0 / 0.38),
+      inset 0 0.3em 0.7em rgb(255 255 255 / 0.4),
+      0 1.6em 3.6em -1.2em rgb(221 183 110 / 0.5);
+    transform-style: preserve-3d;
+  }
+  .coin::before {
+    content: "";
+    position: absolute;
+    inset: 0.75em;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 0.08em rgb(70 52 18 / 0.45), 0 0.05em 0 rgb(255 255 255 / 0.25);
+  }
+  .coin span { font-size: 2.6em; font-weight: 600; color: #3a2c10; letter-spacing: -0.04em; text-shadow: 0 0.04em 0 rgb(255 255 255 / 0.35); }
+  .vault[data-state="held"] .coin-wrap,
+  .vault[data-state="reading"] .coin-wrap,
+  .vault[data-state="spam"] .coin-wrap { transform: translateY(62%); }
+  .vault[data-state="released"] .coin-wrap { transform: translateY(-14%); }
+  .vault[data-state="charged"] .coin-wrap { transform: translateY(190%); opacity: 0; }
+
+  .pane {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 13.4em;
+    height: 15.2em;
+    border-radius: var(--radius);
+  }
+  .pane-edge { position: absolute; left: 1.4em; right: 1.4em; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent); }
+
+  .postmark {
+    position: absolute;
+    left: 50%;
+    top: 13.2em;
+    width: 16em;
+    margin-left: -8em;
+    color: var(--postmark);
+    pointer-events: none;
+  }
+  .postmark path, .postmark circle { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 0.9s var(--ease); }
+  .vault[data-state="spam"] .postmark path,
+  .vault[data-state="spam"] .postmark circle,
+  .vault[data-state="charged"] .postmark path,
+  .vault[data-state="charged"] .postmark circle { stroke-dashoffset: 0; }
+
+  .letter {
+    position: absolute;
+    left: 50%;
+    top: 16.2em;
+    width: 19em;
+    margin-left: -9.5em;
+    padding: 1.25em 1.4em 1.4em;
+    border-radius: 1.1em;
+    opacity: 0;
+    transform: translateX(-60%);
+    transition: transform 0.8s var(--ease), opacity 0.8s var(--ease);
+  }
+  .vault[data-state="reading"] .letter { opacity: 1; transform: none; }
+  .letter-from { font-size: 0.72em; }
+  .letter-subject { margin-top: 0.35em; font-size: 1.05em; font-weight: 600; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .letter-lines { margin-top: 0.9em; display: grid; gap: 0.45em; }
+  .letter-lines i { display: block; height: 0.42em; border-radius: 1em; background: rgb(237 243 239 / 0.12); }
+  .letter-lines i:nth-child(2) { width: 86%; }
+  .letter-lines i:nth-child(3) { width: 64%; }
+  .scan {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--brass), transparent);
+    box-shadow: 0 0 1.2em rgb(221 183 110 / 0.6);
+    opacity: 0;
+  }
+  .vault[data-state="reading"] .scan { opacity: 1; animation: scan 1.8s var(--ease) infinite; }
+  @keyframes scan {
+    from { transform: translateY(0); }
+    to { transform: translateY(8.6em); }
+  }
+
+  .slot { position: absolute; left: 3em; right: 3em; bottom: 0; display: flex; align-items: center; gap: 0.8em; }
+  .slot::before { content: ""; flex: 1; height: 1px; background: var(--hair); }
+  .slot .label { font-size: max(10px, 0.68em); }
+
+  .readout { position: absolute; right: 0; top: 0; display: grid; grid-template-columns: auto auto; gap: 0.35em 1.1em; font-size: max(10px, 0.68em); }
+  .readout dt { color: var(--muted); letter-spacing: 0.14em; }
+  .readout dd { text-align: right; color: var(--ink); letter-spacing: 0.08em; }
+
+  /* Splash */
+  .splash { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--ground); }
+  .splash-mark path[data-mark="stamp"] { fill: none; stroke: var(--ink); stroke-width: 0.6; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vault-glow, .vault[data-state="reading"] .scan { animation: none; }
+    .coin-wrap, .letter, .postmark path, .postmark circle { transition: opacity 0.2s ease; }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .nav[data-solid="true"] { background: var(--ground); backdrop-filter: none; }
+  }
+
+  /* The story is scrubbed by scroll; under reduced motion the same story renders as still frames instead. */
+  .still-only { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .motion-only { display: none; }
+    .still-only { display: block; }
+  }
+
+  /* SplitText line masks: room for descenders without moving the layout. */
+  .display > div { padding-bottom: 0.16em; margin-bottom: -0.16em; }
+
+  .postmark { opacity: 0; transition: opacity 0.3s ease; }
+  .vault[data-state="spam"] .postmark, .vault[data-state="charged"] .postmark { opacity: 1; }
+
+  /* The letter floats over the pane, so it is a denser material than the glass below it (never glass on glass). */
+  .letter.glass { background: linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0)), rgb(11 19 16 / 0.9); }
+}
