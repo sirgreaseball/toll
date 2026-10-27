@@ -56,6 +56,8 @@ Next.js 16 (App Router, TypeScript, Tailwind 4) on Vercel, Firebase Firestore (s
   - **Verified by PayPal:** the payer's PayPal name, country and verification status (from the authorize response) are shown to the recipient and the sender.
   - **Reworded blasts:** the judge writes a neutral pitch line ("<who> offers <what>; wants <what>"). Toll embeds it (`gemini-embedding-2`, 256 dims) and compares it with the last 7 days of messages to other pages; cosine ≥ 0.85 counts as the same pitch and forces spam. A reworded outsourcing pitch sent to Priya, then Dhruv, was caught. `judge-check.ts --pitch` and `--meaning` test this.
   - **Trusted senders:** two or more "worth it" or replied messages and no spam, by PayPal payer ID, means the hold is released at once. The logic is in the authorize route; not yet tested end to end, because the sandbox test buyer now has spam history from these tests.
+- Design pass (pulled forward from M3, Oct 27): vault-glass design system ([DESIGN.md](DESIGN.md)), logo and favicon, once-per-session splash, scroll-scrubbed landing story (Lenis + GSAP), restyled Toll page, status page and inbox. Verified at 1366px and 390px in Playwright. Not yet verified: reduced-motion view, frame times, Lighthouse.
+- Code lives in the private repo github.com/sirgreaseball/toll (branch `master`). Make it public at submission.
 - Next (M2): a redirect fallback for in-app browsers (Instagram and LinkedIn open bio links in webviews where popups fail), the settle job, Firebase Auth sign-in and the settings page.
 
 ## Known simplifications (M1)
