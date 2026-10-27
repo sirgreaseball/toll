@@ -73,7 +73,7 @@ export default function MobileHome() {
         <h2 className="gutter text-[22px] font-extrabold tracking-[-0.03em]">How it works</h2>
         <div className="snap-x mt-4 pb-2">
           {BEATS.map((b) => (
-            <article key={b.label} className="group p-5">
+            <article key={b.label} className="card p-5">
               <p className="label">{b.label}</p>
               <h3 className="mt-3 text-[21px] font-extrabold leading-tight tracking-[-0.03em]">{b.title}</h3>
               <p className="mt-3 text-[15px] leading-relaxed text-muted">{b.body}</p>

@@ -1,12 +1,14 @@
 "use client";
 
 import gsap from "gsap";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+// Shown once per session, on the landing page only (other pages must never wait behind it: PayPal's SDK delays `load`).
 // Shown once per session. The tile outline is drawn by real work finishing (fonts, the page, the first frames),
 // then the tile fills, the T lands and the coin drops in, and the splash lifts away.
 export default function Splash() {
-  const [show, setShow] = useState(true);
+  const [show, setShow] = useState(usePathname() === "/");
   const root = useRef<HTMLDivElement>(null);
   const [pct, setPct] = useState(0);
 
@@ -19,7 +21,7 @@ export default function Splash() {
     try {
       seen = sessionStorage.getItem("toll-splash") === "1";
     } catch {}
-    if (seen || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (seen || location.pathname !== "/" || matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setShow(false);
       done();
       return;

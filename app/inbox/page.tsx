@@ -29,7 +29,7 @@ export default async function Inbox({ searchParams }: PageProps<"/inbox">) {
   const stats = [
     [String(msgs.length), msgs.length === 1 ? "message" : "messages"],
     [String(msgs.filter((m) => m.status === "released").length), "released, $0"],
-    [usd(msgs.filter((m) => m.status === "charged").reduce((s, m) => s + m.amount_cents, 0)), `to ${p.charity}`],
+    [usd(msgs.filter((m) => m.status === "charged").reduce((s, m) => s + m.amount_cents, 0)), "to charity"],
   ];
 
   return (
@@ -40,7 +40,7 @@ export default async function Inbox({ searchParams }: PageProps<"/inbox">) {
         <h1 className="display text-[clamp(40px,5.6vw,88px)] md:mt-5">{p.name}</h1>
         <div className="mt-6 grid grid-cols-3 gap-3 md:mt-12 md:max-w-3xl md:gap-6">
           {stats.map(([n, l]) => (
-            <div key={l} className="group p-4 md:rounded-none md:bg-transparent md:p-0 md:shadow-none">
+            <div key={l} className="card p-4 md:rounded-none md:bg-transparent md:p-0 md:shadow-none">
               <p className="num text-[clamp(26px,4.4vw,64px)] leading-none tracking-tight">{n}</p>
               <p className="label mt-2 md:mt-3">{l}</p>
             </div>

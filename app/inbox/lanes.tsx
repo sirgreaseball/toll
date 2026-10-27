@@ -173,7 +173,7 @@ function Detail({ m, inboxKey }: { m: Message; inboxKey: string }) {
       <p className="mt-2 whitespace-pre-wrap leading-relaxed text-muted">{m.body}</p>
 
       {m.reply ? (
-        <p className="group mt-6 p-4 leading-relaxed">You replied: {m.reply}</p>
+        <p className="card mt-6 p-4 leading-relaxed">You replied: {m.reply}</p>
       ) : (
         <div className="mt-6">
           <textarea className="field min-h-24 leading-relaxed" placeholder="Reply (this releases their hold)" value={reply} onChange={(e) => setReply(e.target.value)} />

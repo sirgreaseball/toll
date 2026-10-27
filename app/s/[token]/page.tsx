@@ -97,13 +97,13 @@ export default async function StatusPage({ params }: PageProps<"/s/[token]">) {
           )}
 
           {m.reply && (
-            <section className="group mt-5 p-5">
+            <section className="card mt-5 p-5">
               <p className="label">{first} replied</p>
               <p className="mt-3 whitespace-pre-wrap leading-relaxed">{m.reply}</p>
             </section>
           )}
 
-          <details className="group mt-5 px-5 py-4 text-muted">
+          <details className="card mt-5 px-5 py-4 text-muted">
             <summary className="label cursor-pointer">Your message</summary>
             <p className="mt-4 font-bold text-ink">{m.subject}</p>
             <p className="mt-2 whitespace-pre-wrap leading-relaxed">{m.body}</p>

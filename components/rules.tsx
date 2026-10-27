@@ -22,7 +22,7 @@ export default function Rules({ price, rules }: { price: string; rules: string[]
         <p className="label mb-5">How the {price} hold works</p>
         {list}
       </div>
-      <button onClick={() => setOpen(true)} className="group mt-4 flex w-full items-center justify-between px-5 py-4 text-left font-bold md:hidden">
+      <button onClick={() => setOpen(true)} className="card mt-4 flex w-full items-center justify-between px-5 py-4 text-left font-bold md:hidden">
         How the {price} hold works
         <span className="text-blue" aria-hidden="true">
           ›
