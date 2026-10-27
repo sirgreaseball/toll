@@ -23,8 +23,8 @@ export default function Vault({
 }) {
   return (
     <div className={`vault ${size === "sm" ? "vault-sm" : ""}`} data-state={state} data-story={story || undefined} aria-hidden="true">
-      <div className="vault-glow glow-brass" data-part="glow-brass" />
-      <div className="vault-glow glow-mint" data-part="glow-mint" />
+      <div className="vault-glow glow-blue" data-part="glow-blue" />
+      <div className="vault-glow glow-go" data-part="glow-go" />
       <div className="vault-glow glow-red" data-part="glow-red" />
       <div className="coin-wrap" data-part="coin">
         <div className="coin" data-part="coin-face">

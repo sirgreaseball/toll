@@ -22,7 +22,7 @@
 
 ## Stack
 
-Next.js 16 (App Router, TypeScript, Tailwind 4) · PayPal REST (Orders v2, Payments v2: authorize, void, capture) and the PayPal JS SDK · Gemini free tier (structured verdicts, `gemini-embedding-2`) · Firebase Firestore (server-only) · GSAP + Lenis for the scroll-scrubbed story.
+Next.js 16 (App Router, TypeScript, Tailwind 4) · PayPal REST (Orders v2, Payments v2: authorize, void, capture) and the PayPal JS SDK · Gemini free tier (structured verdicts, `gemini-embedding-2`) · Firebase Firestore (server-only) · GSAP + Lenis for the scroll-scrubbed story, with a separate app-style shell on phones.
 
 Design system: [DESIGN.md](DESIGN.md). Build plan and status: [PLAN.md](PLAN.md).
 

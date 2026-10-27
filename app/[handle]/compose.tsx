@@ -39,7 +39,7 @@ export default function Compose({
 
   if (judging) {
     return (
-      <section className="glass flex min-h-[36rem] flex-col items-center justify-center p-8 text-center" aria-live="polite">
+      <section className="stage on-dark flex min-h-[34rem] flex-col items-center justify-center rounded-[34px] p-8 text-center" aria-live="polite">
         <Vault state="reading" size="sm" price={price} charity={charity} letters={[{ from: form.sender_name, subject: form.subject }]} />
         <p className="display mt-8 text-[clamp(28px,3vw,40px)]">Reading your message</p>
         <p className="mt-3 max-w-[34ch] leading-relaxed text-muted">
@@ -50,9 +50,9 @@ export default function Compose({
   }
 
   return (
-    <section className="glass self-start p-6 sm:p-8">
+    <section className="bezel self-start"><div className="core p-5 sm:p-8">
       <div className="flex items-baseline justify-between gap-4">
-        <h2 className="text-[clamp(26px,2.6vw,34px)] font-semibold tracking-[-0.035em]">Write to {firstName}</h2>
+        <h2 className="text-[clamp(24px,2.6vw,34px)] font-extrabold tracking-[-0.035em]">Write to {firstName}</h2>
         <span className="label num">Hold · {price}.00</span>
       </div>
 
@@ -73,7 +73,7 @@ export default function Compose({
       <label className="mt-3 grid gap-2">
         <span className="flex justify-between">
           <span className="label">Message</span>
-          <span className={`label num ${left <= 0 ? "text-mint" : ""}`}>{left > 0 ? `${left} to go` : "Ready"}</span>
+          <span className={`label num ${left <= 0 ? "text-go" : ""}`}>{left > 0 ? `${left} to go` : "Ready"}</span>
         </span>
         <textarea
           className="field min-h-52 resize-y leading-relaxed"
@@ -98,7 +98,7 @@ export default function Compose({
         >
           <PayPalButtons
             fundingSource="paypal"
-            style={{ layout: "vertical", shape: "pill", color: "gold", height: 48 }}
+            style={{ layout: "vertical", shape: "pill", color: "gold", height: 52 }}
             createOrder={async () => {
               setError("");
               const res = await fetch("/api/orders", {
@@ -130,10 +130,10 @@ export default function Compose({
       </div>
       <p className="label mt-4 text-center">{ready ? `Hold ${price} · released if it's worth it` : "Fill in every field to continue"}</p>
       {error && (
-        <p className="mt-3 text-center text-sm text-postmark" role="alert">
+        <p className="mt-3 text-center text-sm text-stop" role="alert">
           {error}
         </p>
       )}
-    </section>
+    </div></section>
   );
 }

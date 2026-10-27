@@ -2,7 +2,8 @@ import { AggregateField } from "firebase-admin/firestore";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { Logo } from "@/components/mark";
+import { Arrow, Logo } from "@/components/mark";
+import MobileHome from "@/components/mobile-home";
 import Nav from "@/components/nav";
 import Reveal from "@/components/reveal";
 import Story from "@/components/story";
@@ -43,6 +44,8 @@ const PROOF = [
     body: "The hold waits for you to decide. Toll never takes money because a model was down.",
   },
 ];
+// Bento placement on desktop: one tall dark feature, four lighter neighbours.
+const SPAN = ["md:col-span-7 md:row-span-2", "md:col-span-5", "md:col-span-5", "md:col-span-6", "md:col-span-6"];
 
 async function Ledger() {
   await connection();
@@ -58,10 +61,10 @@ async function Ledger() {
       [usd(charged.data().cents ?? 0), "sent to charity from spam"],
     ];
     return (
-      <div className="grid gap-10 sm:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-3 sm:gap-10">
         {stats.map(([n, l]) => (
           <div key={l} data-reveal>
-            <p className="num text-[clamp(56px,7vw,112px)] leading-none tracking-tight">{n}</p>
+            <p className="num text-[clamp(52px,7vw,112px)] leading-none tracking-tight">{n}</p>
             <p className="label mt-4">{l}</p>
           </div>
         ))}
@@ -74,10 +77,10 @@ async function Ledger() {
 
 function LedgerFallback() {
   return (
-    <div className="grid gap-10 sm:grid-cols-3" aria-busy="true">
+    <div className="grid gap-8 sm:grid-cols-3 sm:gap-10" aria-busy="true">
       {[0, 1, 2].map((i) => (
         <div key={i}>
-          <p className="num text-[clamp(56px,7vw,112px)] leading-none text-ink/15">—</p>
+          <p className="num text-[clamp(52px,7vw,112px)] leading-none text-white/20">—</p>
           <p className="label mt-4">Reading the ledger</p>
         </div>
       ))}
@@ -91,64 +94,69 @@ export default function Home() {
       <Nav />
       <main>
         <Story />
+        <MobileHome />
 
-        <Reveal className="gutter mx-auto w-full max-w-[1400px] pb-10 pt-32">
+        <Reveal id="proof" className="gutter mx-auto w-full max-w-[1400px] pb-10 pt-16 md:pt-40">
           <p className="label" data-reveal>
             Why it holds up
           </p>
-          <h2 data-lines className="display mt-5 max-w-[14ch] text-[clamp(40px,5.4vw,88px)]">
+          <h2 data-lines className="display mt-4 max-w-[14ch] text-[clamp(32px,5.4vw,88px)]">
             Hard to game. Easy to trust.
           </h2>
-          <ol className="mt-16">
-            {PROOF.map((p) => (
-              <li
-                key={p.title}
-                data-reveal
-                className="grid gap-4 border-t border-hair py-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] md:gap-12"
-              >
-                <div>
-                  <p className="num text-[clamp(44px,5vw,80px)] leading-none tracking-tight">{p.stat}</p>
-                  <p className="label mt-3">{p.sub}</p>
-                </div>
-                <div className="max-w-[52ch]">
-                  <h3 className="text-[clamp(22px,2.2vw,30px)] font-semibold tracking-[-0.03em]">{p.title}</h3>
-                  <p className="mt-3 leading-relaxed text-muted">{p.body}</p>
+
+          <ol className="mt-8 grid gap-4 md:mt-16 md:grid-cols-12 md:gap-5">
+            {PROOF.map((p, i) => (
+              <li key={p.title} data-reveal className={SPAN[i]}>
+                <div className={`bezel h-full ${i === 0 ? "bezel-dark stage md:min-h-[30rem]" : ""} ${i === 0 ? "on-dark" : ""}`}>
+                  <div className="core flex h-full flex-col justify-between gap-10 p-6 md:p-9">
+                    <div>
+                      <p className={`num leading-none tracking-tight ${i === 0 ? "text-[clamp(64px,9vw,150px)]" : "text-[clamp(44px,4.4vw,72px)]"}`}>{p.stat}</p>
+                      <p className="label mt-3">{p.sub}</p>
+                    </div>
+                    <div className="max-w-[48ch]">
+                      <h3 className="text-[clamp(20px,2vw,28px)] font-extrabold tracking-[-0.03em]">{p.title}</h3>
+                      <p className="mt-3 text-[15px] leading-relaxed text-muted md:text-base">{p.body}</p>
+                    </div>
+                  </div>
                 </div>
               </li>
             ))}
           </ol>
         </Reveal>
 
-        <Reveal className="gutter mx-auto w-full max-w-[1400px] py-24">
-          <p className="label" data-reveal>
-            Live from the sandbox
-          </p>
-          <h2 data-lines className="display mt-5 max-w-[16ch] text-[clamp(36px,4.4vw,72px)]">
-            Every number is real.
-          </h2>
-          <div className="mt-14">
-            <Suspense fallback={<LedgerFallback />}>
-              <Ledger />
-            </Suspense>
+        <Reveal className="gutter mx-auto w-full max-w-[1400px] py-16 md:py-28">
+          <div className="stage on-dark rounded-[34px] px-6 py-12 md:rounded-[44px] md:px-16 md:py-20">
+            <p className="label" data-reveal>
+              Live from the sandbox
+            </p>
+            <h2 data-lines className="display mt-4 max-w-[16ch] text-[clamp(30px,4.4vw,72px)]">
+              Every number is real.
+            </h2>
+            <div className="mt-10 md:mt-14">
+              <Suspense fallback={<LedgerFallback />}>
+                <Ledger />
+              </Suspense>
+            </div>
           </div>
         </Reveal>
 
-        <Reveal className="gutter mx-auto w-full max-w-[1400px] pb-32 pt-24">
-          <h2 data-lines className="display max-w-[12ch] text-[clamp(48px,8vw,140px)]">
+        <Reveal className="gutter mx-auto w-full max-w-[1400px] pb-16 pt-8 md:pb-40 md:pt-24">
+          <h2 data-lines className="display max-w-[12ch] text-[clamp(40px,8vw,140px)]">
             Make strangers worth hearing from.
           </h2>
-          <div className="mt-12 flex flex-wrap items-center gap-4" data-reveal>
+          <div className="mt-8 flex flex-wrap items-center gap-4 md:mt-12" data-reveal>
             <span data-magnetic>
-              <Link href="/dhruv" className="btn btn-brass h-14 px-7 text-base">
+              <Link href="/dhruv" className="btn btn-blue h-14 text-base">
                 Write to Dhruv
+                <Arrow />
               </Link>
             </span>
             <span className="label">Sandbox · no real money moves</span>
           </div>
         </Reveal>
       </main>
-      <footer className="gutter flex flex-wrap items-center justify-between gap-4 border-t border-hair py-8">
-        <Logo size={22} />
+      <footer className="gutter flex flex-wrap items-center justify-between gap-4 border-t border-hair py-8 max-md:pb-32">
+        <Logo size={24} />
         <p className="label">Built for the PayPal AI Hackathon · 2026</p>
       </footer>
     </>

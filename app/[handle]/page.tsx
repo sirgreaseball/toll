@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import Nav from "@/components/nav";
+import Rules from "@/components/rules";
 import { asProfile, profiles } from "@/lib/db";
 import { usd } from "@/lib/usd";
 import Compose from "./compose";
@@ -25,36 +26,26 @@ export default async function TollPage({ params }: PageProps<"/[handle]">) {
 
   return (
     <>
-      <Nav cta={false} />
-      <main className="gutter mx-auto grid w-full max-w-[1400px] gap-14 pb-24 pt-28 md:grid-cols-[minmax(0,1fr)_minmax(0,560px)] md:gap-16 md:pt-36">
+      <Nav cta={false} title={`toll / ${p.handle}`} />
+      <main className="app-main page-in gutter mx-auto grid w-full max-w-[1400px] gap-8 pt-3 md:grid-cols-[minmax(0,1fr)_minmax(0,560px)] md:gap-16 md:pb-24 md:pt-40">
         <section>
-          <p className="label">toll / {p.handle}</p>
-          <h1 className="display mt-5 text-[clamp(48px,6.4vw,104px)]">{p.name}</h1>
-          {p.headline && <p className="mt-5 max-w-[34ch] text-lg leading-relaxed text-muted">{p.headline}</p>}
+          <p className="label max-md:hidden">toll / {p.handle}</p>
+          <h1 className="display text-[clamp(44px,6.4vw,104px)] md:mt-5">{p.name}</h1>
+          {p.headline && <p className="mt-4 max-w-[34ch] text-base leading-relaxed text-muted md:mt-5 md:text-lg">{p.headline}</p>}
 
-          <dl className="mt-14">
+          <dl className="group mt-7 md:mt-14 md:rounded-none md:bg-transparent md:shadow-none">
             {[
               ["Wants to hear about", p.wants],
               ["Please skip", p.avoids],
             ].map(([k, v]) => (
-              <div key={k} className="grid gap-2 border-t border-hair py-6 sm:grid-cols-[11rem_1fr] sm:gap-8">
+              <div key={k} className="grid gap-2 px-5 py-4 md:grid-cols-[11rem_1fr] md:gap-8 md:border-t md:border-hair md:px-0 md:py-6">
                 <dt className="label pt-1">{k}</dt>
                 <dd className="max-w-[52ch] leading-relaxed">{v}</dd>
               </div>
             ))}
           </dl>
 
-          <div className="mt-10 border-t border-hair pt-6">
-            <p className="label">How the {price} hold works</p>
-            <ol className="mt-5 space-y-3">
-              {rules.map((r, i) => (
-                <li key={r} className="grid grid-cols-[2.5rem_1fr] text-muted">
-                  <span className="num text-[13px] text-ink/40">0{i + 1}</span>
-                  <span className="max-w-[52ch] leading-relaxed">{r}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
+          <Rules price={price} rules={rules} />
         </section>
 
         <Compose handle={p.handle} firstName={first} price={price} charity={p.charity} />

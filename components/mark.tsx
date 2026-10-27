@@ -1,25 +1,42 @@
-// The vault reduced to a stamp: a perforated stamp frame, a brass coin, and the glass pane line across it.
-export const STAMP_PATH =
-  "M4 4 L6.3 4 A1.7 1.7 0 0 0 9.7 4 L14.3 4 A1.7 1.7 0 0 0 17.7 4 L22.3 4 A1.7 1.7 0 0 0 25.7 4 L30.3 4 A1.7 1.7 0 0 0 33.7 4 L38.3 4 A1.7 1.7 0 0 0 41.7 4 L44 4 L44 6.3 A1.7 1.7 0 0 0 44 9.7 L44 14.3 A1.7 1.7 0 0 0 44 17.7 L44 22.3 A1.7 1.7 0 0 0 44 25.7 L44 30.3 A1.7 1.7 0 0 0 44 33.7 L44 38.3 A1.7 1.7 0 0 0 44 41.7 L44 44 L41.7 44 A1.7 1.7 0 0 0 38.3 44 L33.7 44 A1.7 1.7 0 0 0 30.3 44 L25.7 44 A1.7 1.7 0 0 0 22.3 44 L17.7 44 A1.7 1.7 0 0 0 14.3 44 L9.7 44 A1.7 1.7 0 0 0 6.3 44 L4 44 L4 41.7 A1.7 1.7 0 0 0 4 38.3 L4 33.7 A1.7 1.7 0 0 0 4 30.3 L4 25.7 A1.7 1.7 0 0 0 4 22.3 L4 17.7 A1.7 1.7 0 0 0 4 14.3 L4 9.7 A1.7 1.7 0 0 0 4 6.3 L4 4 Z M11 9 H37 A2 2 0 0 1 39 11 V37 A2 2 0 0 1 37 39 H11 A2 2 0 0 1 9 37 V11 A2 2 0 0 1 11 9 Z";
+// The mark: a "T" whose crossbar is the toll barrier and whose stem ends in the coin that pays it.
+import { useId } from "react";
 
 export function Mark({ size = 28, className = "" }: { size?: number; className?: string }) {
+  const id = useId(); // one gradient id per mark: a gradient inside a display:none svg would not resolve for the others
   return (
     <svg viewBox="0 0 48 48" width={size} height={size} className={className} aria-hidden="true">
-      <path d={STAMP_PATH} fill="currentColor" fillRule="evenodd" data-mark="stamp" />
-      <circle cx="24" cy="21" r="7.5" fill="var(--brass)" data-mark="coin" />
-      <rect x="9" y="24" width="30" height="15" rx="0" fill="currentColor" opacity="0.22" data-mark="pane" />
-      <path d="M9 24 H39" stroke="currentColor" strokeWidth="1.2" data-mark="line" />
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#2f9bff" />
+          <stop offset=".55" stopColor="#0070e0" />
+          <stop offset="1" stopColor="#003087" />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="2" width="44" height="44" rx="13" fill={`url(#${id})`} />
+      <rect x="11" y="12" width="26" height="7.5" rx="3.75" fill="#fff" />
+      <rect x="20.25" y="12" width="7.5" height="15" rx="3.75" fill="#fff" />
+      <circle cx="24" cy="34.5" r="5.5" fill="#a5dcff" />
     </svg>
   );
 }
 
-export function Logo({ size = 26 }: { size?: number }) {
+export function Logo({ size = 28 }: { size?: number }) {
   return (
     <span className="inline-flex items-center gap-2.5 text-ink">
       <Mark size={size} />
-      <span className="wordmark" style={{ fontSize: size * 0.82 }}>
+      <span className="font-extrabold tracking-[-0.05em]" style={{ fontSize: size * 0.82 }}>
         toll
       </span>
+    </span>
+  );
+}
+
+export function Arrow() {
+  return (
+    <span className="disc" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 11 11 3M4.5 3H11v6.5" />
+      </svg>
     </span>
   );
 }

@@ -2,10 +2,9 @@
 
 import gsap from "gsap";
 import { useEffect, useRef, useState } from "react";
-import { STAMP_PATH } from "./mark";
 
-// Shown once per session. The stamp outline is drawn by real work finishing (fonts, the page, the first frames),
-// then the coin drops in, the pane slides over it, and the splash lifts away like a pane of glass.
+// Shown once per session. The tile outline is drawn by real work finishing (fonts, the page, the first frames),
+// then the tile fills, the T lands and the coin drops in, and the splash lifts away.
 export default function Splash() {
   const [show, setShow] = useState(true);
   const root = useRef<HTMLDivElement>(null);
@@ -28,7 +27,9 @@ export default function Splash() {
 
     const el = root.current!;
     const outline = el.querySelector("[data-outline]")!;
-    gsap.set(el.querySelectorAll("[data-pop]"), { opacity: 0, scale: 0.9, transformOrigin: "50% 50%" });
+    const pops = el.querySelectorAll("[data-pop]");
+    gsap.set(pops, { opacity: 0, scale: 0.92, transformOrigin: "50% 50%" });
+    gsap.set(el.querySelector("[data-coin]"), { y: -14 });
 
     const tasks = [
       document.fonts.ready,
@@ -58,8 +59,10 @@ export default function Splash() {
           },
         })
         .to(outline, { strokeDashoffset: 0, duration: 0.4, ease: "power3.out" })
-        .to(el.querySelectorAll("[data-pop]"), { opacity: 1, scale: 1, duration: 0.7, ease: "expo.out", stagger: 0.12 }, "-=0.1")
-        .add(done, "+=0.15")
+        .to(el.querySelector("[data-tile]"), { opacity: 1, scale: 1, duration: 0.6, ease: "expo.out" }, "-=0.05")
+        .to(el.querySelectorAll("[data-t]"), { opacity: 1, scale: 1, duration: 0.6, ease: "expo.out", stagger: 0.1 }, "-=0.35")
+        .to(el.querySelector("[data-coin]"), { opacity: 1, scale: 1, y: 0, duration: 0.7, ease: "expo.out" }, "-=0.3")
+        .add(done, "+=0.2")
         .to(el, { clipPath: "inset(0 0 100% 0)", duration: 1.0, ease: "expo.inOut" }, "<");
     });
   }, []);
@@ -69,23 +72,22 @@ export default function Splash() {
     <div ref={root} className="splash" style={{ clipPath: "inset(0 0 0% 0)" }} aria-label="Loading Toll" role="status">
       <div className="flex flex-col items-center gap-7">
         <svg viewBox="0 0 48 48" width="132" height="132" aria-hidden="true">
-          <path
-            d={STAMP_PATH}
-            data-outline
-            pathLength={1}
-            fill="none"
-            stroke="var(--ink)"
-            strokeWidth="0.5"
-            strokeDasharray="1"
-            strokeDashoffset="1"
-          />
-          <circle data-pop cx="24" cy="21" r="7.5" fill="var(--brass)" />
-          <g data-pop>
-            <rect x="9" y="24" width="30" height="15" fill="var(--ink)" opacity="0.22" />
-            <path d="M9 24 H39" stroke="var(--ink)" strokeWidth="0.8" />
-          </g>
+          <defs>
+            <linearGradient id="splash-g" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#2f9bff" />
+              <stop offset=".55" stopColor="#0070e0" />
+              <stop offset="1" stopColor="#003087" />
+            </linearGradient>
+          </defs>
+          <rect data-tile x="2" y="2" width="44" height="44" rx="13" fill="url(#splash-g)" opacity="0" />
+          <rect data-outline x="2" y="2" width="44" height="44" rx="13" pathLength={1} fill="none" stroke="#fff" strokeWidth="0.6" strokeDasharray="1" strokeDashoffset="1" />
+          <rect data-t data-pop x="11" y="12" width="26" height="7.5" rx="3.75" fill="#fff" />
+          <rect data-t data-pop x="20.25" y="12" width="7.5" height="15" rx="3.75" fill="#fff" />
+          <circle data-coin data-pop cx="24" cy="34.5" r="5.5" fill="#a5dcff" />
         </svg>
-        <p className="label num">Preparing · {pct}%</p>
+        <p className="label num" style={{ color: "rgb(190 208 245 / 0.8)" }}>
+          Preparing · {pct}%
+        </p>
       </div>
     </div>
   );

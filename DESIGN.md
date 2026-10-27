@@ -1,40 +1,27 @@
-# Toll: design system
+# Toll design system v2: "Blue Ledger"
 
-**Brief.** Toll is a refundable cover charge for your inbox, for people with more inbound than time. It should feel like money held safely behind glass: calm, weighty and fair. Closest in spirit to Apple Wallet's card physics, a private bank's vault-glass lobby, and the franking mark on a letter.
+One codebase, one domain, two compositions. Desktop is a scroll-scrubbed film plus a master-detail workspace. Phones (under 768px) are recomposed as an app: app bar, glass tab bar, bottom sheets, snap carousel.
 
-**Why this look.** Toll's core act is a PayPal hold: money that is still yours, visible, but held. That is literally a coin behind glass. The ground is the green-black of thick float glass, the action colour is brass, and spam is struck with a red postmark, the way post offices cancel a stamp.
+## Look
 
-## Tokens
+- **Light page, navy stage.** Ground `#f3f6fb`, ink `#0a1b3d`. The story, ledger and vault live on a navy stage (`#06143a`), so every dark plane means "this is the machine".
+- **One accent: PayPal blue** `#0070e0` (deep `#003087`, sky `#009cde`). Released = green `#0a8f5c`, spam = red `#d92d3a`. PayPal gold appears only on PayPal's own button.
+- **Type:** Plus Jakarta Sans (voice, 800 weight, tracking -0.045em on display) and Geist Mono (numbers and labels, tabular).
+- **Shape:** 28px outer radius, 22px inner (double bezel: a tray holding a core). Pills for actions.
+- **Glass** only where something floats: the nav pill, the tab bar, the vault pane.
 
-| Token | Value | Job |
-|---|---|---|
-| `--ground` | `#08100d` | vault green-black, the page |
-| `--raised` | `#0e1814` | solid fallback for glass |
-| `--ink` | `#edf3ef` | text |
-| `--muted` | `#94a69d` | quiet text (AA on ground) |
-| `--hair` | ink at 10% | hairlines |
-| `--glass` | `rgb(196 232 213 / 6%)` + 22px blur | anything that floats or holds money |
-| `--brass` | `#ddb76e` | the one accent: you can act here; also the coin |
-| `--mint` | `#8fddb2` | released (state only) |
-| `--postmark` | `#e46a50` | spam or charged (state only) |
+## Mark
 
-## Type
-
-- **Manrope** (voice): display 700 at tracking −0.05em, line height 0.95; body 17px.
-- **Martian Mono** (data): labels 11px uppercase, tracking 0.14em; all numbers use tabular figures.
-
-## Shape
-
-- Surfaces are 22px. Corners inside a surface are concentric (22 minus the inset, so fields are 14px). Buttons and chips are pills.
-- Strokes are 1px hairlines at 10% ink. Depth comes from glass and tone, not borders.
+A "T" whose crossbar is the toll barrier and whose stem ends in the coin that pays it, on a blue gradient tile. Splash: the tile outline is drawn by real loading work, then the tile fills, the T lands, the coin drops, and the screen lifts away. Shown once per session.
 
 ## Motion
 
-- Rare reveals: `expo.out`, 1.1s, overlaps allowed. Story: scroll-scrubbed (`scrub: 0.6`) under Lenis (`lerp 0.085`).
-- Interface: `cubic-bezier(0.22, 1, 0.36, 1)`, 0.2 to 0.45s, no overshoot. Hover 0.18s. Press scale 0.97.
-- Cursor (fine pointers only): magnetic buttons (3px max), a specular highlight that follows the pointer across glass, the coin tilting toward the pointer, a soft ripple when glass is tapped.
-- Reduced motion: no smooth scroll, no splash, the story becomes still frames of the same scene.
+GSAP ScrollTrigger scrubs the landing story; Lenis (lerp 0.085) runs from one GSAP ticker on fine pointers only. Phones keep native scroll. Press scale 0.97, hover under 0.2s, magnetic buttons lean 3px max, glass catches a pointer highlight. Sheets track the finger 1:1, rubber-band upward, and close on distance or flick velocity.
 
-## Metaphor
+## Phone shell (same routes, same domain)
 
-**The vault.** A brass coin sits behind a frosted pane. A hold slides the coin behind the glass. A letter crosses the pane and a reading line scans it. Worth it: the coin rises back out, mint. Spam: a red postmark strikes the coin and it drops through the slot to charity. The logo is the vault reduced to a stamp: a perforated stamp frame, the coin, and the pane line across it.
+- `components/tabbar.tsx`: Home, Write, Inbox; safe-area aware; sliding active pill.
+- `components/sheet.tsx`: bottom sheet (portalled to body).
+- `components/mobile-home.tsx`: stage card whose vault loops the story, tappable step switcher, snap carousel.
+- Inbox: lanes as a segmented control, messages open in a sheet. Desktop: list left, open message with score dial right.
+- Baseline: `viewport-fit=cover`, `dvh`, tap highlight off, 16px inputs, `overscroll-behavior: none`, `touch-action: manipulation`.

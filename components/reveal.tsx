@@ -10,7 +10,7 @@ gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP);
 
 // Scroll-scrubbed arrival: headings ([data-lines]) rise line by line from behind a mask, everything else
 // marked [data-reveal] lifts a few pixels. Scroll back and it rewinds.
-export default function Reveal({ children, className }: { children: React.ReactNode; className?: string }) {
+export default function Reveal({ children, className, id }: { children: React.ReactNode; className?: string; id?: string }) {
   const root = useRef<HTMLDivElement>(null);
   useGSAP(
     () => {
@@ -39,7 +39,7 @@ export default function Reveal({ children, className }: { children: React.ReactN
     { scope: root },
   );
   return (
-    <div ref={root} className={className}>
+    <div ref={root} id={id} className={className}>
       {children}
     </div>
   );
