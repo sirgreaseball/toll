@@ -64,3 +64,5 @@ Next.js 16 (App Router, TypeScript, Tailwind 4) on Vercel, Firebase Firestore (s
 
 - The inbox is one demo profile behind a shared key (`INBOX_KEY`). Firebase Auth replaces this in M2.
 - Charged holds are captured to the Toll sandbox merchant account and shown as donated. A real launch would route them through PayPal Giving Fund or Payouts.
+
+- Deployed Oct 27: https://toll-rho.vercel.app (Vercel project `toll`, sandbox PayPal keys in production env). Deploy with `npx vercel deploy --prod`. Repo stays private until submission.
