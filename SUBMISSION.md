@@ -13,7 +13,7 @@ Everything to paste into the hackathon form, plus the demo video script. Fill th
 - Try it: https://toll-rho.vercel.app/dhruv (send a message) · https://toll-rho.vercel.app/new (make your own Toll)
 - Agent API docs: https://toll-rho.vercel.app/agents
 - Code: https://github.com/sirgreaseball/toll (make it public before submitting)
-- Demo video: [ ] paste the YouTube or Vimeo link
+- Demo video: https://youtu.be/uhGFZcTyey8
 
 **Built with:** PayPal Orders v2 (intent AUTHORIZE), PayPal Payments v2 (authorize, void, capture), PayPal JS SDK, Google Gemini (structured output and embeddings), Next.js 16, TypeScript, Tailwind CSS 4, GSAP, Lenis, Firebase Firestore, Vercel (hosting and cron).
 

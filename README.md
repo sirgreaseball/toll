@@ -5,7 +5,7 @@
 
 <p align="center"><img src="docs/hero.png" width="860" alt="Toll landing page"></p>
 
-<!-- VIDEO -->
+<p align="center"><a href="https://youtu.be/uhGFZcTyey8"><b>Watch the 2.5-minute demo</b></a> · everything in it runs live against the PayPal sandbox</p>
 
 ---
 
