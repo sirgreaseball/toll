@@ -66,3 +66,10 @@ Next.js 16 (App Router, TypeScript, Tailwind 4) on Vercel, Firebase Firestore (s
 - Charged holds are captured to the Toll sandbox merchant account and shown as donated. A real launch would route them through PayPal Giving Fund or Payouts.
 
 - Deployed Oct 27: https://toll-rho.vercel.app (Vercel project `toll`, sandbox PayPal keys in production env). Deploy with `npx vercel deploy --prod`. Repo stays private until submission.
+
+## Status (Nov 9)
+
+- Added: make-your-own Toll (`/new`, per-page hashed inbox keys), agent API (`/api/v1`, `/agents`, `llms.txt`) with PayPal redirect checkout and return page `/r`, in-app browser fallback, daily auto-settle cron (`/api/settle`, `CRON_SECRET`), Toll share cards.
+- Verified on a local production build: signup, duplicate and reserved handles rejected, inbox opens only with the right key, agent GET/POST/poll, redirect order returns an approval link, settle rejects without the secret. Deployed and the live routes return 200.
+- Not verified: a full redirect checkout approved in PayPal and the cron's first real run.
+- Submission kit: [SUBMISSION.md](SUBMISSION.md).
