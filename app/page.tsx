@@ -33,9 +33,9 @@ const PROOF = [
   },
   {
     stat: "2",
-    sub: "good messages to earn trust",
-    title: "Good senders stop paying.",
-    body: "After two messages worth reading and no spam, a sender's holds are released the moment they send.",
+    sub: "people who found them worth it",
+    title: "Good senders get the benefit of the doubt.",
+    body: "Once two different people found a sender worth it, keyed to their PayPal account, any message the AI is unsure about is released at once. It never overrides spam.",
   },
   {
     stat: "$0",

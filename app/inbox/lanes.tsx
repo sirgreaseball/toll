@@ -212,7 +212,7 @@ function Detail({ m, inboxKey }: { m: Message; inboxKey: string }) {
                   }}
                   className={`btn h-11 px-5 ${armed ? "bg-stop text-white" : "btn-danger"}`}
                 >
-                  {armed ? `Tap again to charge ${usd(m.amount_cents)}` : `Charge ${usd(m.amount_cents)}`}
+                  {armed ? `Confirm ${usd(m.amount_cents)}` : `Charge ${usd(m.amount_cents)}`}
                 </button>
               </>
             )}
