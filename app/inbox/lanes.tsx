@@ -121,6 +121,7 @@ function Detail({ m, inboxKey }: { m: Message; inboxKey: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [armed, setArmed] = useState(false);
+  const [settled, setSettled] = useState(false); // hides the money buttons the moment PayPal confirms, before the refresh lands
 
   async function act(action: "release" | "charge" | "reply") {
     setBusy(true);
@@ -134,6 +135,7 @@ function Detail({ m, inboxKey }: { m: Message; inboxKey: string }) {
       });
       if (!res.ok) return setError((await res.json().catch(() => ({}))).error ?? "That didn't go through. Try again.");
       setReply("");
+      if (m.status === "held") setSettled(true); // release, charge and reply all settle a held hold
       router.refresh();
     } catch {
       setError("You're offline. Nothing changed; try again.");
@@ -196,7 +198,7 @@ function Detail({ m, inboxKey }: { m: Message; inboxKey: string }) {
             <button disabled={busy || !reply.trim()} onClick={() => act("reply")} className="btn btn-blue h-11 px-5">
               Reply
             </button>
-            {m.status === "held" && (
+            {m.status === "held" && !settled && (
               <>
                 <button disabled={busy} onClick={() => act("release")} className="btn btn-ghost h-11 px-5">
                   Release
