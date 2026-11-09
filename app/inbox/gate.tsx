@@ -8,16 +8,18 @@ import Nav from "@/components/nav";
 const open = (handle: string, key: string) => `/inbox?handle=${encodeURIComponent(handle)}&key=${encodeURIComponent(key)}`;
 
 // The inbox is private. The handle and key are remembered on this device so the Inbox tab opens straight in.
-export default function KeyGate() {
+// After a failed attempt (`error`), the saved pair is forgotten so a stale key can't loop the device back here.
+export default function KeyGate({ error }: { error?: string }) {
   const router = useRouter();
   const [handle, setHandle] = useState("");
   const [key, setKey] = useState("");
   useEffect(() => {
     try {
+      if (error) return localStorage.removeItem("toll-inbox");
       const saved = JSON.parse(localStorage.getItem("toll-inbox") ?? "null");
       if (saved?.handle && saved?.key) router.replace(open(saved.handle, saved.key));
     } catch {}
-  }, [router]);
+  }, [router, error]);
 
   return (
     <>
@@ -38,6 +40,11 @@ export default function KeyGate() {
           <button className="btn btn-blue" disabled={!handle.trim() || !key.trim()}>
             Open inbox
           </button>
+          {error && (
+            <p className="text-center text-sm text-stop" role="alert">
+              {error}
+            </p>
+          )}
         </form>
         <p className="mt-8 text-muted">
           No Toll yet?{" "}

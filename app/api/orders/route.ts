@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Fill in every field. The message needs at least 40 characters." }, { status: 400 });
   }
   const { handle, redirect, ...fields } = parsed.data;
-  if (!(await allow(req, "msg", 20))) return NextResponse.json({ error: "Too many messages from this network. Try again in an hour." }, { status: 429 });
+  if (!(await allow(req, "msg", 60))) return NextResponse.json({ error: "Too many messages from this network. Try again in an hour." }, { status: 429 });
 
   const snap = await profiles().doc(handle).get();
   if (!snap.exists) return NextResponse.json({ error: "This Toll page doesn't exist." }, { status: 404 });

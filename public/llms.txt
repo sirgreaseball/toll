@@ -1,6 +1,6 @@
 # Toll
 
-> Toll lets anyone reach a person who has a Toll page by placing a small refundable PayPal hold on the message. An AI scores the message against what the recipient said they want. Worth it (score 70+), or replied to: the hold is voided and nobody pays. Spam: if the recipient confirms it (or it is a detected mass blast or an attempt to manipulate the AI), the hold is captured and goes to the recipient's chosen charity; otherwise it is released within 3 days. Sandbox only.
+> Toll lets anyone reach a person who has a Toll page by placing a small refundable PayPal hold on the message. An AI scores the message against what the recipient said they want. Worth it (score 70+), or replied to: the hold is voided and nobody pays. Spam: if the recipient confirms it (or the same PayPal account pasted the exact same message to other people), the hold is captured for the recipient's chosen charity; otherwise it is released within 3 days. Sandbox only.
 
 ## Agent API (no key needed; a human must approve every hold in PayPal)
 
@@ -10,7 +10,7 @@
 
 ## Rules
 
-- One message per real reason. Copies and AI-rewordings of the same pitch sent to several people are detected and marked as spam.
+- One message per real reason. Copies of a message, and AI-rewordings of the same pitch from the same sender, sent to several people are detected and marked as spam.
 - Instructions to the scoring AI inside a message are detected and scored 0.
 - Messages sent through this API are shown to the recipient as sent by your agent, with its operator.
 

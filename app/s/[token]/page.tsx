@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import Nav from "@/components/nav";
 import Vault, { type VaultState } from "@/components/vault";
-import { asMessage, asProfile, messages, profiles } from "@/lib/db";
+import { asMessage, asProfile, chargesAutomatically, isWorking, messages, profiles, staleClaim } from "@/lib/db";
+import { orderStatus } from "@/lib/paypal";
 import { usd } from "@/lib/usd";
 
 export const instant = false; // every request reads the database
@@ -18,8 +19,15 @@ export default async function StatusPage({ params }: PageProps<"/s/[token]">) {
   const first = to.name.split(" ")[0];
   const price = usd(m.amount_cents);
 
-  // Matches the settle job: only mechanical abuse is charged without the recipient's say-so.
-  const mechanical = !!m.flags?.some((f) => f === "mass_blast" || f === "prompt_injection");
+  // Approved in PayPal but the payer never made it back to /r (closed tab, killed webview), or a request died
+  // mid-flow: send them through /r, which finishes the job, instead of showing "Waiting for PayPal" until tomorrow.
+  if (m.paypal_order_id && (m.status === "pending" || staleClaim(m))) {
+    const approved = m.status === "authorizing" || (await orderStatus(m.paypal_order_id).catch(() => "")) === "APPROVED";
+    if (approved) redirect(`/r?token=${encodeURIComponent(m.paypal_order_id)}`);
+  }
+
+  const working = isWorking(m);
+  const auto = chargesAutomatically(m); // the same rule the settle job uses
   const state = {
     released: {
       tone: "text-go",
@@ -30,20 +38,20 @@ export default async function StatusPage({ params }: PageProps<"/s/[token]">) {
     },
     charged: {
       tone: "text-stop",
-      title: `Your ${price} went to ${to.charity}.`,
-      text: m.settled_by ? "It was sent as a mass blast or tried to trick the AI, so it was charged automatically." : `${first} confirmed this as spam.`,
+      title: `Your ${price} was charged for ${to.charity}.`,
+      text: `${m.settled_by ? "Your PayPal account sent this exact message to other people, so it was charged automatically." : `${first} confirmed this as spam.`} (Sandbox: Toll captures it; a live version donates through PayPal Giving Fund.)`,
     },
     failed: { tone: "text-stop", title: "Not sent.", text: "PayPal didn't place the hold, so nothing was charged." },
     pending: { tone: "text-muted", title: "Waiting for PayPal.", text: "Approve the hold in PayPal to send the message." },
     authorizing: { tone: "text-ink", title: "Placing the hold.", text: "PayPal is placing the hold. This page updates on its own." },
-    held: m.judging
+    held: working
       ? { tone: "text-ink", title: "Reading your message.", text: `The ${price} hold is placed. The AI is checking whether it's worth ${first}'s time. This page updates on its own.` }
       : m.verdict === "spam"
         ? {
             tone: "text-stop",
             title: "Flagged as spam.",
-            text: mechanical
-              ? `Your ${price} is on hold. It looks like a mass blast or an attempt to trick the AI, so it goes to ${to.charity} unless ${first} releases it.`
+            text: auto
+              ? `Your ${price} is on hold. Your PayPal account sent this exact message to other people, so it goes to ${to.charity} unless ${first} releases it.`
               : `Your ${price} is on hold. It goes to ${to.charity} only if ${first} confirms it's spam; otherwise it's released within 3 days.`,
           }
         : {
@@ -52,7 +60,6 @@ export default async function StatusPage({ params }: PageProps<"/s/[token]">) {
             text: `Your ${price} is on hold, not charged. If ${first} replies or releases it, you pay nothing.`,
           },
   }[m.status];
-  const working = m.status === "authorizing" || (m.status === "held" && !!m.judging);
   const vault: VaultState =
     m.status === "released"
       ? "released"

@@ -12,7 +12,8 @@ gsap.registerPlugin(ScrollTrigger);
 export default function Smooth() {
   useEffect(() => {
     if (!matchMedia("(hover: hover) and (pointer: fine)").matches || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const lenis = new Lenis({ lerp: 0.085, wheelMultiplier: 0.9 });
+    // allowNestedScroll: text areas and other scrollable boxes keep their own wheel scrolling.
+    const lenis = new Lenis({ lerp: 0.085, wheelMultiplier: 0.9, allowNestedScroll: true });
     lenis.on("scroll", ScrollTrigger.update);
     const raf = (t: number) => lenis.raf(t * 1000);
     gsap.ticker.add(raf);

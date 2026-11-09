@@ -14,7 +14,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
       { status: 400 },
     );
   }
-  if (!(await allow(req, "msg", 20))) return NextResponse.json({ error: "Too many messages from this network. Try again in an hour." }, { status: 429 });
+  if (!(await allow(req, "msg", 60))) return NextResponse.json({ error: "Too many messages from this network. Try again in an hour." }, { status: 429 });
   const snap = await profiles().doc(handle.toLowerCase()).get();
   if (!snap.exists) return NextResponse.json({ error: "No Toll page with that handle." }, { status: 404 });
 

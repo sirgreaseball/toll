@@ -77,6 +77,9 @@ export type Message = {
   status: "pending" | "authorizing" | "held" | "released" | "charged" | "failed";
   claimed_at?: string; // when a request claimed the pending message to place its hold (guards against double processing)
   judging?: boolean; // hold placed, AI verdict not back yet
+  judging_since?: string;
+  held_at?: string; // when PayPal placed the hold; the settle job times holds from here
+  blast_self_copy?: boolean; // the same PayPal account sent this exact text to other pages (no AI involved)
   paypal_order_id?: string;
   authorization_id?: string;
   verdict?: "worth_it" | "borderline" | "spam";
@@ -99,6 +102,19 @@ export type Message = {
   created_at: string;
   resolved_at?: string;
 };
+
+// The one rule for taking money without the recipient's say-so: the same PayPal account pasted the exact same
+// message to other people. That is mechanical, not a judgement, so neither the AI nor a page owner can trigger it.
+export const chargesAutomatically = (m: Pick<Message, "verdict" | "blast_self_copy">) => m.verdict === "spam" && !!m.blast_self_copy;
+
+// A request that died mid-flow (timeout, crash) must not leave a message "in progress" forever.
+export const CLAIM_STALE_MS = 120_000;
+export const JUDGING_STALE_MS = 90_000;
+const older = (iso: string | undefined, ms: number) => !iso || Date.now() - Date.parse(iso) > ms;
+export const staleClaim = (m: Message) => m.status === "authorizing" && older(m.claimed_at, CLAIM_STALE_MS);
+// Still being worked on right now: placing the hold, or the AI is reading it.
+export const isWorking = (m: Message) =>
+  (m.status === "authorizing" && !staleClaim(m)) || (m.status === "held" && !!m.judging && !older(m.judging_since, JUDGING_STALE_MS));
 
 type Snap = { id: string; data(): unknown };
 export const asProfile = (s: Snap) => ({ ...(s.data() as object), handle: s.id }) as Profile;

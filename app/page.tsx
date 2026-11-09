@@ -17,7 +17,7 @@ const PROOF = [
     stat: "0.887",
     sub: "vs 0.684 · cut-off 0.85",
     title: "Blasts get caught, even reworded.",
-    body: "The AI boils every message down to one neutral line and compares it with what other people received this week. The same pitch reworded scored 0.887. Genuinely different messages scored 0.684.",
+    body: "The AI boils every message down to one neutral line and compares it with what the same sender sent other people this week. The same pitch reworded scored 0.887. Genuinely different messages scored 0.684.",
   },
   {
     stat: "PayPal",
@@ -58,7 +58,7 @@ async function Ledger() {
     const stats = [
       [String(judged.data().count), "messages held and judged"],
       [String(released.data().count), "holds released, sender paid $0"],
-      [usd(charged.data().cents ?? 0), "sent to charity from spam"],
+      [usd(charged.data().cents ?? 0), "charged from spam, for charity"],
     ];
     return (
       <div className="grid gap-8 sm:grid-cols-3 sm:gap-10">

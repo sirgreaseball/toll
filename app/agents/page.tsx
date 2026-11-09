@@ -39,7 +39,7 @@ const STEPS = [
   {
     n: "04",
     title: "Poll for the verdict",
-    body: "Worth it: the hold is voided and nobody pays. Spam the recipient confirms, or a detected mass blast, goes to the recipient's charity. Coaching tells the agent how to do better next time.",
+    body: "Worth it: the hold is voided and nobody pays. Spam the recipient confirms (or the same exact message pasted to several people) is charged for the recipient's charity. Coaching tells the agent how to do better next time.",
     code: `GET /api/v1/messages/<token>
 
 { "status": "released", "verdict": "worth_it", "score": 95,

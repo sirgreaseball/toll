@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import Nav from "@/components/nav";
 import { asMessage, messages, openInbox } from "@/lib/db";
@@ -15,7 +14,8 @@ export default async function Inbox({ searchParams }: PageProps<"/inbox">) {
   const { key, handle } = await searchParams;
   if (typeof key !== "string") return <KeyGate />;
   const p = await openInbox(typeof handle === "string" ? handle : (process.env.DEMO_HANDLE ?? "dhruv"), key);
-  if (!p) notFound();
+  // A wrong key shows the form again (and clears what this device saved), never a dead-end 404.
+  if (!p) return <KeyGate error="That handle and key don't match." />;
   // ponytail: filters and sorts in memory to avoid a composite index; fine for one inbox.
   const all = await messages().where("profile_handle", "==", p.handle).get();
   const msgs = all.docs

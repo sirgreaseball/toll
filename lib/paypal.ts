@@ -19,6 +19,17 @@ async function token() {
   return (await res.json()).access_token as string;
 }
 
+// Carries PayPal's HTTP status and issue code, so callers can tell "not approved yet" from "declined".
+export class PayPalError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public issue?: string,
+  ) {
+    super(message);
+  }
+}
+
 // PayPal-Request-Id makes retries safe: the same id never places or moves money twice.
 export async function post(path: string, requestId: string, body?: unknown) {
   const res = await fetch(BASE + path, {
@@ -33,8 +44,12 @@ export async function post(path: string, requestId: string, body?: unknown) {
     cache: "no-store",
   });
   const text = await res.text();
-  const data = text ? JSON.parse(text) : {};
-  if (!res.ok) throw new Error(`PayPal ${path} ${res.status}: ${data.details?.[0]?.issue ?? data.name ?? ""} ${data.message ?? text}`);
+  let data: Record<string, any> = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {}
+  const issue = data.details?.[0]?.issue ?? data.name;
+  if (!res.ok) throw new PayPalError(`PayPal ${path} ${res.status}: ${issue ?? ""} ${data.message ?? text}`, res.status, issue);
   return data;
 }
 
@@ -73,21 +88,30 @@ export async function createHoldOrder(
   return { id: order.id as string, approveUrl };
 }
 
-// Order status (CREATED, APPROVED, COMPLETED...). Used to finish redirect orders whose payer never came back to /r.
-export async function orderStatus(orderId: string) {
+async function getOrder(orderId: string) {
   const res = await fetch(`${BASE}/v2/checkout/orders/${encodeURIComponent(orderId)}`, {
     headers: { Authorization: `Bearer ${await token()}` },
     cache: "no-store",
   });
-  if (!res.ok) throw new Error(`PayPal order ${orderId} ${res.status}`);
-  return (await res.json()).status as string;
+  if (!res.ok) throw new PayPalError(`PayPal order ${orderId} ${res.status}`, res.status);
+  return res.json();
 }
+
+// Order status (CREATED, APPROVED, COMPLETED...). Used to finish redirect orders whose payer never came back to /r.
+export const orderStatus = async (orderId: string) => (await getOrder(orderId)).status as string;
 
 // Who paid, as PayPal knows them. `verified` means PayPal has verified the account.
 export type Payer = { id?: string; name?: string; email?: string; country?: string; verified: boolean };
 
 export async function authorizeOrder(orderId: string) {
-  const order = await post(`/v2/checkout/orders/${orderId}/authorize`, `auth-${orderId}`, {});
+  let order;
+  try {
+    order = await post(`/v2/checkout/orders/${orderId}/authorize`, `auth-${orderId}`, {});
+  } catch (e) {
+    // An earlier attempt placed the hold but its answer was lost: read the hold back instead of failing.
+    if (!(e instanceof PayPalError && e.issue === "ORDER_ALREADY_AUTHORIZED")) throw e;
+    order = await getOrder(orderId);
+  }
   const auth = order.purchase_units?.[0]?.payments?.authorizations?.[0];
   if (!auth?.id) throw new Error(`PayPal placed no hold on order ${orderId}`);
   const pp = order.payment_source?.paypal;

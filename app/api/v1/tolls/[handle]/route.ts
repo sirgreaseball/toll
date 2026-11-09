@@ -15,7 +15,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ handle: 
       "Sending places a PayPal hold for the price. Nothing is charged when you send.",
       "An AI scores the message against `wants` and `avoids`. Score 70+ releases the hold at once.",
       "If the recipient replies or releases it, the hold is released.",
-      "If it is spam and the recipient confirms, the hold is charged to `charity`. Detected mass blasts and attempts to manipulate the AI are charged automatically after 2 days; other unconfirmed holds are released.",
+      "If it is spam and the recipient confirms, the hold is charged for `charity`. The only automatic charge: the same PayPal account sent this exact message to other people. Other unconfirmed holds are released after 2 days.",
       "Messages sent by an agent are labelled as such, with the agent's name and operator.",
     ],
     send: { method: "POST", url: `${origin}/api/v1/tolls/${p.handle}/messages`, docs: `${origin}/agents` },

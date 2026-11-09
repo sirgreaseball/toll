@@ -17,7 +17,7 @@ const Body = z.object({
   headline: z.string().trim().max(120).optional(),
   wants: z.string().trim().min(20, "Say a little more about what you want to hear.").max(600),
   avoids: z.string().trim().min(10, "Say a little more about what to skip.").max(600),
-  price_cents: z.number().int().min(100).max(2000),
+  price_cents: z.number().int().min(100).max(2000).multipleOf(100, "Prices are whole dollars, $1 to $20."),
   charity: z.enum(CHARITIES),
 });
 
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   const { handle, headline, ...rest } = parsed.data;
   if (RESERVED.has(handle)) return NextResponse.json({ error: "That handle is taken." }, { status: 409 });
 
-  if (!(await allow(req, "page", 5))) return NextResponse.json({ error: "Too many new pages from this network. Try again in an hour." }, { status: 429 });
+  if (!(await allow(req, "page", 30))) return NextResponse.json({ error: "Too many new pages from this network. Try again in an hour." }, { status: 429 });
 
   const key = randomBytes(18).toString("base64url");
   try {

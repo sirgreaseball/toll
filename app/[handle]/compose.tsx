@@ -46,13 +46,14 @@ export default function Compose({
     if (!ready) return setError("Fill in every field. The message needs at least 40 characters.");
     setLeaving(true);
     setError("");
-    const res = await fetch("/api/orders", {
+    const data = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ handle, ...form, redirect: true }),
-    });
-    const data = await res.json();
-    if (!res.ok || !data.approveUrl) {
+    })
+      .then((r) => r.json())
+      .catch(() => ({}));
+    if (!data.approveUrl) {
       setLeaving(false);
       return setError(data.error ?? "PayPal is unavailable right now. Try again in a minute.");
     }
@@ -75,7 +76,7 @@ export default function Compose({
     <section className="bezel self-start"><div className="core p-5 sm:p-8">
       <div className="flex items-baseline justify-between gap-4">
         <h2 className="text-[clamp(24px,2.6vw,34px)] font-extrabold tracking-[-0.035em]">Write to {firstName}</h2>
-        <span className="label num">Hold · {price}.00</span>
+        <span className="label num">Hold · {price}</span>
       </div>
 
       <div className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -142,14 +143,22 @@ export default function Compose({
             }}
             onApprove={async ({ orderID }) => {
               setJudging(true);
-              const res = await fetch(`/api/orders/${orderID}/authorize`, { method: "POST" });
-              const data = await res.json();
-              if (!res.ok) {
-                setJudging(false);
-                setError(data.error);
-                return;
+              // The authorize call is safe to repeat: once a request has the message, a retry just returns its status
+              // token. So a timeout or dropped connection is retried, and the status page shows the real outcome.
+              for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                  const res = await fetch(`/api/orders/${orderID}/authorize`, { method: "POST" });
+                  const data = await res.json();
+                  if (res.ok) return router.push(`/s/${data.token}`);
+                  if (res.status < 500 && res.status !== 409) {
+                    setJudging(false);
+                    return setError(data.error);
+                  }
+                } catch {} // non-JSON 504 or offline
+                await new Promise((r) => setTimeout(r, 2500));
               }
-              router.push(`/s/${data.token}`);
+              setJudging(false);
+              setError("We couldn't confirm your message. Nothing was charged; try again in a minute.");
             }}
             onError={() => setError((e) => e || "PayPal couldn't place the hold. Try again.")}
           />

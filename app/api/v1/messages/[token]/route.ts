@@ -1,21 +1,22 @@
 import { NextResponse } from "next/server";
-import { asMessage, messages } from "@/lib/db";
+import { asMessage, isWorking, messages, staleClaim } from "@/lib/db";
 import { completeHold } from "@/lib/flow";
 import { orderStatus } from "@/lib/paypal";
 
 export const maxDuration = 60;
 
 // Agent API: poll a message. The token is the private status token returned when the message was created.
-// If the human approved in PayPal but never came back to /r (closed the tab), polling finishes the job.
+// If the human approved in PayPal but never came back to /r (closed the tab), or a request died mid-flow,
+// polling finishes the job.
 export async function GET(_req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const found = await messages().where("status_token", "==", token).limit(1).get();
   if (found.empty) return NextResponse.json({ error: "Unknown message." }, { status: 404 });
   let m = asMessage(found.docs[0]);
 
-  if (m.status === "pending" && m.paypal_order_id) {
+  if (m.paypal_order_id && (m.status === "pending" || staleClaim(m))) {
     try {
-      if ((await orderStatus(m.paypal_order_id)) === "APPROVED") {
+      if (m.status === "authorizing" || (await orderStatus(m.paypal_order_id)) === "APPROVED") {
         await completeHold(m.paypal_order_id);
         m = asMessage(await found.docs[0].ref.get());
       }
@@ -24,7 +25,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     }
   }
 
-  const status = m.status === "pending" ? "awaiting_approval" : m.status === "authorizing" || m.judging ? "processing" : m.status;
+  const status = m.status === "pending" ? "awaiting_approval" : isWorking(m) || m.status === "authorizing" ? "processing" : m.status;
   return NextResponse.json({
     status, // awaiting_approval | processing | held | released | charged | failed
     to: m.profile_handle,

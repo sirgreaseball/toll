@@ -9,7 +9,7 @@ import { usd } from "@/lib/usd";
 const LANES = [
   { title: "Your call", hint: "Still on hold. Reply or release to refund them, or charge it.", has: (m: Message) => m.verdict === "borderline" || !m.verdict },
   { title: "Worth it", hint: "The hold was released. They paid nothing.", has: (m: Message) => m.verdict === "worth_it" },
-  { title: "Spam", hint: "Flagged by the AI. Confirm the charge or let it go. Unconfirmed spam is released after 2 days, unless it was a mass blast or tried to trick the AI.", has: (m: Message) => m.verdict === "spam" },
+  { title: "Spam", hint: "Flagged by the AI. Confirm the charge or let it go. Unconfirmed spam is released after 2 days, unless the sender pasted the same message to other people.", has: (m: Message) => m.verdict === "spam" },
 ];
 
 // Desktop: a master-detail workspace (list left, the open message right). Phones: a list, with the message in a sheet.
@@ -120,19 +120,26 @@ function Detail({ m, inboxKey }: { m: Message; inboxKey: string }) {
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [armed, setArmed] = useState(false);
 
   async function act(action: "release" | "charge" | "reply") {
     setBusy(true);
+    setArmed(false);
     setError("");
-    const res = await fetch(`/api/messages/${m.id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: inboxKey, action, reply: action === "reply" ? reply : undefined }),
-    });
-    setBusy(false);
-    if (!res.ok) return setError((await res.json()).error);
-    setReply("");
-    router.refresh();
+    try {
+      const res = await fetch(`/api/messages/${m.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: inboxKey, action, reply: action === "reply" ? reply : undefined }),
+      });
+      if (!res.ok) return setError((await res.json().catch(() => ({}))).error ?? "That didn't go through. Try again.");
+      setReply("");
+      router.refresh();
+    } catch {
+      setError("You're offline. Nothing changed; try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   const status = { held: "on hold", released: "released", charged: "charged", pending: "pending", authorizing: "placing", failed: "failed" }[m.status];
@@ -194,8 +201,18 @@ function Detail({ m, inboxKey }: { m: Message; inboxKey: string }) {
                 <button disabled={busy} onClick={() => act("release")} className="btn btn-ghost h-11 px-5">
                   Release
                 </button>
-                <button disabled={busy} onClick={() => act("charge")} className="btn btn-danger h-11 px-5">
-                  Charge {usd(m.amount_cents)}
+                {/* Capture is irreversible, so it takes a second tap within 4s: one stray tap can't take anyone's money. */}
+                <button
+                  disabled={busy}
+                  onClick={() => {
+                    if (!armed) {
+                      setArmed(true);
+                      setTimeout(() => setArmed(false), 4000);
+                    } else act("charge");
+                  }}
+                  className={`btn h-11 px-5 ${armed ? "bg-stop text-white" : "btn-danger"}`}
+                >
+                  {armed ? `Tap again to charge ${usd(m.amount_cents)}` : `Charge ${usd(m.amount_cents)}`}
                 </button>
               </>
             )}

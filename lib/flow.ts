@@ -1,9 +1,9 @@
 import { randomBytes } from "node:crypto";
-import { getFirestore } from "firebase-admin/firestore";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { z } from "zod";
-import { asMessage, asProfile, blastHash, messages, profiles, type Message, type Profile } from "./db";
+import { asMessage, asProfile, blastHash, messages, profiles, staleClaim, type Message, type Profile } from "./db";
 import { BLAST_SIMILARITY, EMBED_MODEL, cosine, embed, judge, markBlast, type Verdict } from "./judge";
-import { authorizeOrder, createHoldOrder, releaseHold } from "./paypal";
+import { PayPalError, authorizeOrder, createHoldOrder, releaseHold } from "./paypal";
 
 // The money flow, shared by the web composer and the agent API: open a hold order, then (after the payer
 // approves in PayPal) place the hold, judge the message, and release the hold if it earned it.
@@ -52,7 +52,6 @@ export class FlowError extends Error {
   }
 }
 
-const STALE_CLAIM_MS = 120_000; // a request that claimed the message and died (timeout) is retried after this
 const SENT = new Set<Message["status"]>(["held", "released", "charged"]); // only messages that really cost a hold
 
 // Called once the sender approved in PayPal (popup, /r, or a poll that finds the order approved).
@@ -65,24 +64,34 @@ export async function completeHold(orderId: string) {
 
   const claimed = await getFirestore().runTransaction(async (t) => {
     const m = asMessage(await t.get(ref));
-    const stale = m.status === "authorizing" && (!m.claimed_at || Date.now() - Date.parse(m.claimed_at) > STALE_CLAIM_MS);
-    if (m.status !== "pending" && !stale) return null;
+    if (m.status !== "pending" && !staleClaim(m)) return { token: m.status_token, msg: null };
     t.update(ref, { status: "authorizing", claimed_at: new Date().toISOString() });
-    return m;
+    return { token: m.status_token, msg: m };
   });
-  if (!claimed) return asMessage(await ref.get()).status_token;
-  const msg = claimed;
+  if (!claimed.msg) return claimed.token;
+  const msg = claimed.msg;
 
   let hold: Awaited<ReturnType<typeof authorizeOrder>>;
   try {
     hold = await authorizeOrder(orderId); // idempotent per order (PayPal-Request-Id), so a stale retry is safe
   } catch (e) {
     console.error(e);
+    // Not approved yet, or PayPal didn't answer: put the message back so a later approval or retry still works.
+    // Only a definite refusal (declined, expired, ...) ends it.
+    const notApproved = e instanceof PayPalError && e.issue === "ORDER_NOT_APPROVED";
+    const retryable = !(e instanceof PayPalError) || e.status >= 500 || e.status === 429;
+    if (notApproved || retryable) {
+      await ref.update({ status: "pending", claimed_at: FieldValue.delete() });
+      throw notApproved
+        ? new FlowError("Approve the hold in PayPal first.", 409)
+        : new FlowError("PayPal didn't answer. Nothing was sent yet; try again in a moment.", 503);
+    }
     await ref.update({ status: "failed" });
     throw new FlowError("PayPal didn't place the hold, so nothing was sent.", 402);
   }
   const { authorizationId, payer } = hold;
-  await ref.update({ status: "held", authorization_id: authorizationId, payer, judging: true });
+  const now = new Date().toISOString();
+  await ref.update({ status: "held", authorization_id: authorizationId, payer, held_at: now, judging: true, judging_since: now });
 
   const profile = asProfile(await profiles().doc(msg.profile_handle).get());
   const since = new Date(Date.now() - 7 * 864e5).toISOString();
@@ -107,18 +116,28 @@ export async function completeHold(orderId: string) {
   const update: Record<string, unknown> = { trusted, judging: false };
   let v: Verdict | null = verdict;
   if (v) {
-    // Blasts: exact copies by hash, AI-reworded copies by the meaning of the judge's neutral pitch line.
+    // Blasts: exact copies of the text (from anyone: it's a template), and AI-reworded copies of the same pitch,
+    // but only from the same sender. Different people asking for similar things (internships, feedback) is not a blast.
     // Only messages someone actually paid a hold for count, so unpaid drafts can't frame an honest sender.
     const embedding = await embed(v.pitch);
+    // Same sender = same PayPal account. Never the typed email: anyone could type someone else's to frame them.
+    const sameSender = (m: Message) => !!payer.id && m.payer?.id === payer.id;
     const others = recent.docs.map(asMessage).filter((m) => m.profile_handle !== msg.profile_handle && SENT.has(m.status));
-    const blastCopies = others.filter(
+    const exact = others.filter((m) => m.body_hash === msg.body_hash);
+    const reworded = others.filter(
       (m) =>
-        m.body_hash === msg.body_hash ||
-        (!!embedding && !!m.embedding && m.embedding_model === EMBED_MODEL && cosine(embedding, m.embedding) >= BLAST_SIMILARITY),
-    ).length;
+        m.body_hash !== msg.body_hash &&
+        sameSender(m) &&
+        !!embedding &&
+        !!m.embedding &&
+        m.embedding_model === EMBED_MODEL &&
+        cosine(embedding, m.embedding) >= BLAST_SIMILARITY,
+    );
+    const blastCopies = exact.length + reworded.length;
     if (blastCopies > 0) v = markBlast(v);
     Object.assign(update, {
       blast_copies: blastCopies,
+      blast_self_copy: exact.some(sameSender),
       pitch: v.pitch,
       embedding,
       embedding_model: embedding ? EMBED_MODEL : undefined,
