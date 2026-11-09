@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import Nav from "@/components/nav";
 import Rules from "@/components/rules";
-import { asProfile, profiles } from "@/lib/db";
+import { getProfile } from "@/lib/db";
 import { usd } from "@/lib/usd";
 import Compose from "./compose";
 
@@ -11,9 +11,8 @@ export const instant = false; // every request reads the database
 export default async function TollPage({ params }: PageProps<"/[handle]">) {
   await connection(); // Firestore reads happen per request, never at prerender
   const { handle } = await params;
-  const snap = await profiles().doc(handle.toLowerCase()).get();
-  if (!snap.exists) notFound();
-  const p = asProfile(snap);
+  const p = await getProfile(handle);
+  if (!p) notFound();
   const price = usd(p.price_cents);
   const first = p.name.split(" ")[0];
   const rules = [

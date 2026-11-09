@@ -53,6 +53,7 @@ body {
   font-size: 17px;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-wrap: anywhere; /* names, subjects and URLs come from strangers: a 60-letter word must wrap, not widen the page */
 }
 ::selection { background: rgb(0 112 224 / 0.22); }
 :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 8px; }

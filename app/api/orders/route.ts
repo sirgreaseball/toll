@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { asProfile, profiles } from "@/lib/db";
+import { getProfile } from "@/lib/db";
 import { MessageInput, startMessage } from "@/lib/flow";
 import { allow } from "@/lib/limit";
 
@@ -16,11 +16,11 @@ export async function POST(req: Request) {
   const { handle, redirect, ...fields } = parsed.data;
   if (!(await allow(req, "msg", 60))) return NextResponse.json({ error: "Too many messages from this network. Try again in an hour." }, { status: 429 });
 
-  const snap = await profiles().doc(handle).get();
-  if (!snap.exists) return NextResponse.json({ error: "This Toll page doesn't exist." }, { status: 404 });
+  const profile = await getProfile(handle);
+  if (!profile) return NextResponse.json({ error: "This Toll page doesn't exist." }, { status: 404 });
 
   try {
-    const { orderId, approveUrl } = await startMessage(asProfile(snap), fields, new URL(req.url).origin, !!redirect);
+    const { orderId, approveUrl } = await startMessage(profile, fields, new URL(req.url).origin, !!redirect);
     return NextResponse.json({ orderId, approveUrl });
   } catch (e) {
     console.error(e);

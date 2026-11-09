@@ -1,19 +1,20 @@
 import { randomBytes } from "node:crypto";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { z } from "zod";
-import { asMessage, asProfile, blastHash, messages, profiles, staleClaim, type Message, type Profile } from "./db";
+import { asMessage, asProfile, blastHash, clean, messages, profiles, staleClaim, type Message, type Profile } from "./db";
 import { BLAST_SIMILARITY, EMBED_MODEL, cosine, embed, judge, markBlast, type Verdict } from "./judge";
 import { PayPalError, authorizeOrder, createHoldOrder, releaseHold } from "./paypal";
 
 // The money flow, shared by the web composer and the agent API: open a hold order, then (after the payer
 // approves in PayPal) place the hold, judge the message, and release the hold if it earned it.
 
+const text = () => z.string().transform(clean).pipe(z.string().trim());
 export const MessageInput = z.object({
-  sender_name: z.string().trim().min(1).max(80),
+  sender_name: text().pipe(z.string().min(1).max(80)),
   sender_email: z.email(),
-  subject: z.string().trim().min(3).max(120),
-  body: z.string().trim().min(40).max(4000),
-  agent: z.object({ name: z.string().trim().min(1).max(80), operator: z.string().trim().max(120).optional() }).optional(),
+  subject: text().pipe(z.string().min(3).max(120)),
+  body: text().pipe(z.string().min(40).max(4000)),
+  agent: z.object({ name: text().pipe(z.string().min(1).max(80)), operator: text().pipe(z.string().max(120)).optional() }).optional(),
 });
 
 export async function startMessage(profile: Profile, input: z.infer<typeof MessageInput>, origin: string, redirect: boolean) {

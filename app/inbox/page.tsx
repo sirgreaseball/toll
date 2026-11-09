@@ -1,6 +1,6 @@
 import { connection } from "next/server";
 import Nav from "@/components/nav";
-import { asMessage, messages, openInbox } from "@/lib/db";
+import { asMessage, messages, openInbox, type Message } from "@/lib/db";
 import { usd } from "@/lib/usd";
 import KeyGate from "./gate";
 import Lanes from "./lanes";
@@ -22,7 +22,11 @@ export default async function Inbox({ searchParams }: PageProps<"/inbox">) {
     .map(asMessage)
     .filter((m) => m.status === "held" || m.status === "released" || m.status === "charged")
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
-    .map((m) => ({ ...m, embedding: undefined, payer: m.payer && { ...m.payer, email: undefined } }));
+    // Only what the inbox shows goes to the browser: no sender email, payment ids, status tokens or embeddings.
+    .map(({ embedding, sender_email, status_token, paypal_order_id, authorization_id, body_hash, pitch, ...m }) => ({
+      ...m,
+      payer: m.payer && { ...m.payer, email: undefined },
+    })) as Message[];
 
   const stats = [
     [String(msgs.length), msgs.length === 1 ? "message" : "messages"],

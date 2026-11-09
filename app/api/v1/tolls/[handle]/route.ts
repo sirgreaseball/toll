@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { asProfile, profiles, publicProfile } from "@/lib/db";
+import { getProfile, publicProfile } from "@/lib/db";
 
 // Agent API: read a person's Toll before writing to them. Their wants and avoids are the rubric the AI judges by.
 export async function GET(req: Request, { params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
-  const snap = await profiles().doc(handle.toLowerCase()).get();
-  if (!snap.exists) return NextResponse.json({ error: "No Toll page with that handle." }, { status: 404 });
-  const p = publicProfile(asProfile(snap));
+  const found = await getProfile(handle);
+  if (!found) return NextResponse.json({ error: "No Toll page with that handle." }, { status: 404 });
+  const p = publicProfile(found);
   const origin = new URL(req.url).origin;
   return NextResponse.json({
     ...p,

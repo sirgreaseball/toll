@@ -61,7 +61,7 @@ export default function MobileHome() {
           </div>
         </div>
         <div className="mt-4">
-          <Link href="/dhruv" className="btn btn-blue w-full justify-between pl-6 pr-2">
+          <Link href="/dhruv" className="btn btn-blue w-full justify-between pl-6 pr-5">
             Write to Dhruv
             <Arrow />
           </Link>

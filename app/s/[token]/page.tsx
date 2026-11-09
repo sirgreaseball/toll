@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import Nav from "@/components/nav";
 import Vault, { type VaultState } from "@/components/vault";
-import { asMessage, asProfile, chargesAutomatically, isWorking, messages, profiles, staleClaim } from "@/lib/db";
+import { asMessage, chargesAutomatically, getProfile, isToken, isWorking, messages, staleClaim } from "@/lib/db";
 import { orderStatus } from "@/lib/paypal";
 import { usd } from "@/lib/usd";
 
@@ -12,10 +12,12 @@ export const instant = false; // every request reads the database
 export default async function StatusPage({ params }: PageProps<"/s/[token]">) {
   await connection(); // Firestore reads happen per request, never at prerender
   const { token } = await params;
+  if (!isToken(token)) notFound();
   const found = await messages().where("status_token", "==", token).limit(1).get();
   if (found.empty) notFound();
   const m = asMessage(found.docs[0]);
-  const to = asProfile(await profiles().doc(m.profile_handle).get());
+  const to = await getProfile(m.profile_handle);
+  if (!to) notFound();
   const first = to.name.split(" ")[0];
   const price = usd(m.amount_cents);
 

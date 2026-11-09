@@ -70,7 +70,7 @@ export default function Agents() {
                   <p className="mt-3 leading-relaxed text-muted">{s.body}</p>
                 </div>
                 {s.code && (
-                  <pre className="num whitespace-pre-wrap break-words rounded-2xl bg-stage p-5 text-[12.5px] leading-relaxed text-[#cfe0ff]">
+                  <pre className="num whitespace-pre-wrap rounded-2xl bg-stage p-5 text-[12.5px] leading-relaxed text-[#cfe0ff]">
                     <code>{s.code}</code>
                   </pre>
                 )}

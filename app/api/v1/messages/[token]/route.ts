@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { asMessage, isWorking, messages, staleClaim } from "@/lib/db";
+import { asMessage, isToken, isWorking, messages, staleClaim } from "@/lib/db";
 import { completeHold } from "@/lib/flow";
 import { orderStatus } from "@/lib/paypal";
 
@@ -10,8 +10,8 @@ export const maxDuration = 60;
 // polling finishes the job.
 export async function GET(_req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const found = await messages().where("status_token", "==", token).limit(1).get();
-  if (found.empty) return NextResponse.json({ error: "Unknown message." }, { status: 404 });
+  const found = isToken(token) ? await messages().where("status_token", "==", token).limit(1).get() : null;
+  if (!found || found.empty) return NextResponse.json({ error: "Unknown message." }, { status: 404 });
   let m = asMessage(found.docs[0]);
 
   if (m.paypal_order_id && (m.status === "pending" || staleClaim(m))) {

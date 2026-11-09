@@ -17,8 +17,12 @@ export default function Sheet({ open, onClose, children, label }: { open: boolea
     gsap.fromTo(p, { yPercent: 100 }, { yPercent: 0, y: 0, duration: 0.55, ease: "expo.out" });
     gsap.fromTo(scrim.current, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power2.out" });
     document.documentElement.style.overflow = "hidden";
+    p.focus({ preventScroll: true }); // keyboard and screen readers land in the sheet
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && closeRef.current();
+    window.addEventListener("keydown", esc);
     return () => {
       document.documentElement.style.overflow = "";
+      window.removeEventListener("keydown", esc);
     };
   }, [open]);
 
@@ -26,6 +30,8 @@ export default function Sheet({ open, onClose, children, label }: { open: boolea
     gsap.to(scrim.current, { opacity: 0, duration: 0.25 });
     gsap.to(panel.current, { yPercent: 100, y: 0, duration: 0.35, ease: "power3.in", onComplete: onClose });
   };
+  const closeRef = useRef(close);
+  closeRef.current = close;
 
   const down = (e: React.PointerEvent) => {
     if (drag.current) return;
@@ -54,7 +60,7 @@ export default function Sheet({ open, onClose, children, label }: { open: boolea
   return createPortal(
     <>
       <div ref={scrim} className="scrim" onClick={close} />
-      <div ref={panel} className="sheet" role="dialog" aria-modal="true" aria-label={label}>
+      <div ref={panel} className="sheet outline-none" role="dialog" aria-modal="true" aria-label={label} tabIndex={-1}>
         <div className="sheet-grab" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
           <i />
         </div>

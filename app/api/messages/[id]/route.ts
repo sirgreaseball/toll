@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { asMessage, messages, openInbox } from "@/lib/db";
+import { asMessage, isMessageId, messages, openInbox } from "@/lib/db";
 import { chargeHold, releaseHold } from "@/lib/paypal";
 
 const Body = z.object({
@@ -17,6 +17,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { action, reply, key } = parsed.data;
   if (action === "reply" && !reply) return NextResponse.json({ error: "Write a reply first." }, { status: 400 });
 
+  if (!isMessageId(id)) return NextResponse.json({ error: "Message not found." }, { status: 404 });
   const ref = messages().doc(id);
   const snap = await ref.get();
   if (!snap.exists) return NextResponse.json({ error: "Message not found." }, { status: 404 });

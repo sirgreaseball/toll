@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { CHARITIES, hashKey, profiles } from "@/lib/db";
+import { CHARITIES, clean, hashKey, profiles } from "@/lib/db";
 import { allow } from "@/lib/limit";
 
 // Handles live at the site root, so app routes and obvious impostors are off limits.
@@ -12,11 +12,11 @@ const Body = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .regex(/^[a-z0-9_]{3,24}$/, "Handles are 3 to 24 letters, numbers or underscores."),
-  name: z.string().trim().min(2).max(60),
-  headline: z.string().trim().max(120).optional(),
-  wants: z.string().trim().min(20, "Say a little more about what you want to hear.").max(600),
-  avoids: z.string().trim().min(10, "Say a little more about what to skip.").max(600),
+    .regex(/^[a-z0-9][a-z0-9_]{2,23}$/, "Handles are 3 to 24 letters, numbers or underscores, starting with a letter or number."),
+  name: z.string().transform(clean).pipe(z.string().trim().min(2).max(60)),
+  headline: z.string().transform(clean).pipe(z.string().trim().max(120)).optional(),
+  wants: z.string().transform(clean).pipe(z.string().trim().min(20, "Say a little more about what you want to hear.").max(600)),
+  avoids: z.string().transform(clean).pipe(z.string().trim().min(10, "Say a little more about what to skip.").max(600)),
   price_cents: z.number().int().min(100).max(2000).multipleOf(100, "Prices are whole dollars, $1 to $20."),
   charity: z.enum(CHARITIES),
 });

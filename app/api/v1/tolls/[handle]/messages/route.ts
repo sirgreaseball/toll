@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { asProfile, profiles } from "@/lib/db";
+import { getProfile } from "@/lib/db";
 import { MessageInput, startMessage } from "@/lib/flow";
 import { allow } from "@/lib/limit";
 
@@ -15,12 +15,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
     );
   }
   if (!(await allow(req, "msg", 60))) return NextResponse.json({ error: "Too many messages from this network. Try again in an hour." }, { status: 429 });
-  const snap = await profiles().doc(handle.toLowerCase()).get();
-  if (!snap.exists) return NextResponse.json({ error: "No Toll page with that handle." }, { status: 404 });
+  const profile = await getProfile(handle);
+  if (!profile) return NextResponse.json({ error: "No Toll page with that handle." }, { status: 404 });
 
   const origin = new URL(req.url).origin;
   try {
-    const m = await startMessage(asProfile(snap), parsed.data, origin, true);
+    const m = await startMessage(profile, parsed.data, origin, true);
     return NextResponse.json(
       {
         message_id: m.messageId,

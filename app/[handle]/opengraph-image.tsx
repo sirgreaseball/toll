@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { asProfile, profiles } from "@/lib/db";
+import { getProfile } from "@/lib/db";
 import { usd } from "@/lib/usd";
 
 export const size = { width: 1200, height: 630 };
@@ -9,8 +9,7 @@ export const alt = "Write to me on Toll";
 // The card people see when a Toll link is pasted into a DM, a bio or a post.
 export default async function Image({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
-  const snap = await profiles().doc(handle.toLowerCase()).get();
-  const p = snap.exists ? asProfile(snap) : null;
+  const p = await getProfile(handle);
   return new ImageResponse(
     (
       <div

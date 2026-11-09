@@ -11,7 +11,9 @@ export default function Create({ charities }: { charities: string[] }) {
   const [error, setError] = useState("");
   const [made, setMade] = useState<{ handle: string; key: string } | null>(null);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setF({ ...f, [k]: k === "price_cents" ? Number(e.target.value) : e.target.value });
+    // Handles are typed the way they will be stored: lowercase, letters, numbers and underscores only.
+    const v = k === "handle" ? e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24) : e.target.value;
+    setF({ ...f, [k]: k === "price_cents" ? Number(v) : v });
     setError("");
   };
 
@@ -58,24 +60,24 @@ export default function Create({ charities }: { charities: string[] }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="grid gap-2">
             <span className="label">Handle</span>
-            <input className="field" required autoCapitalize="none" autoCorrect="off" placeholder="yourname" value={f.handle} onChange={set("handle")} />
+            <input className="field" required autoCapitalize="none" autoCorrect="off" placeholder="yourname" maxLength={24} value={f.handle} onChange={set("handle")} />
           </label>
           <label className="grid gap-2">
             <span className="label">Your name</span>
-            <input className="field" required autoComplete="name" value={f.name} onChange={set("name")} />
+            <input className="field" required autoComplete="name" minLength={2} maxLength={60} value={f.name} onChange={set("name")} />
           </label>
         </div>
         <label className="grid gap-2">
           <span className="label">One line about you</span>
-          <input className="field" placeholder="Founder, designer, student…" value={f.headline} onChange={set("headline")} />
+          <input className="field" placeholder="Founder, designer, student…" maxLength={120} value={f.headline} onChange={set("headline")} />
         </label>
         <label className="grid gap-2">
           <span className="label">Happy to hear about</span>
-          <textarea className="field min-h-24 leading-relaxed" required placeholder="Job offers in…, feedback on…, collaborations with…" value={f.wants} onChange={set("wants")} />
+          <textarea className="field min-h-24 leading-relaxed" required minLength={20} maxLength={600} placeholder="Job offers in…, feedback on…, collaborations with…" value={f.wants} onChange={set("wants")} />
         </label>
         <label className="grid gap-2">
           <span className="label">Please skip</span>
-          <textarea className="field min-h-20 leading-relaxed" required placeholder="Agency pitches, crypto, SEO…" value={f.avoids} onChange={set("avoids")} />
+          <textarea className="field min-h-20 leading-relaxed" required minLength={10} maxLength={600} placeholder="Agency pitches, crypto, SEO…" value={f.avoids} onChange={set("avoids")} />
         </label>
 
         <fieldset className="grid gap-2">

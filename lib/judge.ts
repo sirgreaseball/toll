@@ -145,7 +145,10 @@ export async function judge(r: Recipient, m: Incoming): Promise<Verdict> {
       temperature: 0,
     },
   });
-  const out = Output.parse(JSON.parse(res.text ?? "null"));
+  const parsed = Output.parse(JSON.parse(res.text ?? "null"));
+  // "mass_blast" is a measured fact (the same pitch on other pages), set only by markBlast. The model guessing it
+  // from tone would label a one-off message as a blast in the inbox.
+  const out = { ...parsed, flags: parsed.flags.filter((f) => f !== "mass_blast") };
 
   const injected = out.flags.includes("prompt_injection");
   const score = Math.max(0, Math.min(injected ? 15 : 100, Math.round(out.score)));

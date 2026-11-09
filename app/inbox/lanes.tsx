@@ -165,7 +165,7 @@ function Detail({ m, inboxKey }: { m: Message; inboxKey: string }) {
 
       {(m.agent || m.settled_by) && (
         <p className="label mt-4 text-blue!">
-          {m.agent && `Sent by AI agent ${m.agent.name}${m.agent.operator ? ` for ${m.agent.operator}` : ""}`}
+          {m.agent && `Sent by AI agent ${m.agent.name}${m.agent.operator ? `, which says it works for ${m.agent.operator}` : ""}`}
           {m.agent && m.settled_by && " · "}
           {m.settled_by && "Settled automatically before the hold expired"}
         </p>

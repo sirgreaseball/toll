@@ -158,7 +158,7 @@ export default function Home() {
                 <Arrow />
               </Link>
             </div>
-            <pre className="num whitespace-pre-wrap break-words rounded-[28px] bg-stage p-6 text-[12.5px] leading-relaxed text-[#cfe0ff] md:p-8" data-reveal>
+            <pre className="num whitespace-pre-wrap rounded-[28px] bg-stage p-6 text-[12.5px] leading-relaxed text-[#cfe0ff] md:p-8" data-reveal>
               <code>{`POST /api/v1/tolls/dhruv/messages
 { "subject": "Design-engineering internship",
   "agent": { "name": "Scout",

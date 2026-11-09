@@ -82,16 +82,16 @@ export default function Compose({
       <div className="mt-7 grid gap-3 sm:grid-cols-2">
         <label className="grid gap-2">
           <span className="label">Your name</span>
-          <input className="field" autoComplete="name" value={form.sender_name} onChange={set("sender_name")} />
+          <input className="field" autoComplete="name" maxLength={80} value={form.sender_name} onChange={set("sender_name")} />
         </label>
         <label className="grid gap-2">
           <span className="label">Your email</span>
-          <input className="field" type="email" autoComplete="email" value={form.sender_email} onChange={set("sender_email")} />
+          <input className="field" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" maxLength={254} value={form.sender_email} onChange={set("sender_email")} />
         </label>
       </div>
       <label className="mt-3 grid gap-2">
         <span className="label">Subject</span>
-        <input className="field" value={form.subject} onChange={set("subject")} />
+        <input className="field" maxLength={120} value={form.subject} onChange={set("subject")} />
       </label>
       <label className="mt-3 grid gap-2">
         <span className="flex justify-between">
@@ -101,6 +101,7 @@ export default function Compose({
         <textarea
           className="field min-h-52 resize-y leading-relaxed"
           placeholder={`Who you are, why ${firstName}, and what you're asking for.`}
+          maxLength={4000}
           value={form.body}
           onChange={set("body")}
         />
@@ -112,15 +113,17 @@ export default function Compose({
         </button>
       )}
       {/* PayPal's own disabled state paints a grey box, so the button is gated by a clear cover instead. */}
-      <div className={`relative mt-6 transition-opacity duration-300 ${ready ? "" : "opacity-45"} ${inApp ? "hidden" : ""}`}>
+      <div className={`relative isolate mt-6 transition-opacity duration-300 ${ready ? "" : "opacity-45"} ${inApp ? "hidden" : ""}`}>
         {!ready && (
           <button
             type="button"
             aria-label="Fill in every field to continue"
-            className="absolute inset-0 z-10 cursor-not-allowed rounded-full"
+            className="absolute inset-0 z-20 cursor-not-allowed rounded-full"
             onClick={() => setError("Fill in every field. The message needs at least 40 characters.")}
           />
         )}
+        {/* PayPal's iframe positions itself, so it sits in its own z-0 layer and the cover above can actually block it. */}
+        <div className="relative z-0">
         <PayPalScriptProvider
           options={{ clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "test", intent: "authorize", currency: "USD" }}
         >
@@ -160,9 +163,14 @@ export default function Compose({
               setJudging(false);
               setError("We couldn't confirm your message. Nothing was charged; try again in a minute.");
             }}
-            onError={() => setError((e) => e || "PayPal couldn't place the hold. Try again.")}
+            onCancel={() => setError("You closed PayPal before approving. Nothing was held.")}
+            // Closing the PayPal window before it finishes loading arrives as an error, not a cancel.
+            onError={(err) =>
+              setError((e) => e || (/closed/i.test(String(err)) ? "You closed PayPal before approving. Nothing was held." : "PayPal couldn't place the hold. Try again."))
+            }
           />
         </PayPalScriptProvider>
+        </div>
       </div>
       <p className="label mt-4 text-center">{ready ? `Hold ${price} · released if it's worth it` : "Fill in every field to continue"}</p>
       {ready && !inApp && (
