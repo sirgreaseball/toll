@@ -74,7 +74,9 @@ export type Message = {
   body: string;
   body_hash: string;
   amount_cents: number;
-  status: "pending" | "held" | "released" | "charged" | "failed";
+  status: "pending" | "authorizing" | "held" | "released" | "charged" | "failed";
+  claimed_at?: string; // when a request claimed the pending message to place its hold (guards against double processing)
+  judging?: boolean; // hold placed, AI verdict not back yet
   paypal_order_id?: string;
   authorization_id?: string;
   verdict?: "worth_it" | "borderline" | "spam";

@@ -73,6 +73,16 @@ export async function createHoldOrder(
   return { id: order.id as string, approveUrl };
 }
 
+// Order status (CREATED, APPROVED, COMPLETED...). Used to finish redirect orders whose payer never came back to /r.
+export async function orderStatus(orderId: string) {
+  const res = await fetch(`${BASE}/v2/checkout/orders/${encodeURIComponent(orderId)}`, {
+    headers: { Authorization: `Bearer ${await token()}` },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`PayPal order ${orderId} ${res.status}`);
+  return (await res.json()).status as string;
+}
+
 // Who paid, as PayPal knows them. `verified` means PayPal has verified the account.
 export type Payer = { id?: string; name?: string; email?: string; country?: string; verified: boolean };
 

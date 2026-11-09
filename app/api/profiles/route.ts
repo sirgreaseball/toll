@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { CHARITIES, hashKey, profiles } from "@/lib/db";
+import { allow } from "@/lib/limit";
 
 // Handles live at the site root, so app routes and obvious impostors are off limits.
 const RESERVED = new Set(["api", "inbox", "new", "r", "s", "agents", "about", "admin", "paypal", "toll", "settings", "login", "signup", "help"]);
@@ -26,6 +27,8 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Check the form." }, { status: 400 });
   const { handle, headline, ...rest } = parsed.data;
   if (RESERVED.has(handle)) return NextResponse.json({ error: "That handle is taken." }, { status: 409 });
+
+  if (!(await allow(req, "page", 5))) return NextResponse.json({ error: "Too many new pages from this network. Try again in an hour." }, { status: 429 });
 
   const key = randomBytes(18).toString("base64url");
   try {

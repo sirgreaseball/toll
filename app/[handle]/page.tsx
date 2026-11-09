@@ -19,9 +19,9 @@ export default async function TollPage({ params }: PageProps<"/[handle]">) {
   const rules = [
     `PayPal holds ${price}. Nothing is charged when you send.`,
     `If the AI finds your message worth ${first}'s time, or ${first} replies, the hold is released.`,
-    `If it's spam, the ${price} goes to ${p.charity}.`,
+    `If it's spam and ${first} confirms it, the ${price} goes to ${p.charity}. Unconfirmed holds are released within 3 days, except mass blasts and attempts to trick the AI.`,
     `${first} sees your PayPal-verified name and country, so nobody can pose as someone else.`,
-    "Send good messages and you become a trusted sender: future holds are released at once.",
+    "Send good messages to two different people and you become a trusted sender: when the AI is on the fence, your hold is released at once.",
   ];
 
   return (

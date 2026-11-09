@@ -123,11 +123,12 @@ export function markBlast(v: Verdict): Verdict {
 export async function judge(r: Recipient, m: Incoming): Promise<Verdict> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY missing");
-  const body = m.body.replaceAll("</message", "< /message");
+  // Every sender-controlled field stays inside the <message> fence: no field may open or close the tag, in any case.
+  const fence = (s: string) => s.replace(/<\s*(\/?)\s*message/gi, "‹$1message");
   // Agent-sent messages say so: the recipient asked for people, so the judge should weigh who is really behind it.
-  const via = m.agent ? ` (sent by the AI agent "${m.agent.name}"${m.agent.operator ? ` on behalf of ${m.agent.operator}` : ""})` : "";
+  const via = m.agent ? ` (sent by the AI agent "${fence(m.agent.name)}"${m.agent.operator ? ` on behalf of ${fence(m.agent.operator)}` : ""})` : "";
   const res = await generate(apiKey, {
-    contents: `<message>\nFrom: ${m.sender_name}${via}\nSubject: ${m.subject}\n\n${body}\n</message>`,
+    contents: `<message>\nFrom: ${fence(m.sender_name)}${via}\nSubject: ${fence(m.subject)}\n\n${fence(m.body)}\n</message>`,
     config: {
       systemInstruction: system(r),
       responseMimeType: "application/json",

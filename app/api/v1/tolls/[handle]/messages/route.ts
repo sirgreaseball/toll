@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { asProfile, profiles } from "@/lib/db";
 import { MessageInput, startMessage } from "@/lib/flow";
+import { allow } from "@/lib/limit";
 
 // Agent API: an AI agent drafts the message; a human (the person or company it works for) approves the hold
 // in PayPal at `approve_url`. The agent then polls `status_url` for the verdict and any reply.
@@ -13,6 +14,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ handle:
       { status: 400 },
     );
   }
+  if (!(await allow(req, "msg", 20))) return NextResponse.json({ error: "Too many messages from this network. Try again in an hour." }, { status: 429 });
   const snap = await profiles().doc(handle.toLowerCase()).get();
   if (!snap.exists) return NextResponse.json({ error: "No Toll page with that handle." }, { status: 404 });
 

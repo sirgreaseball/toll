@@ -18,23 +18,33 @@ export default async function StatusPage({ params }: PageProps<"/s/[token]">) {
   const first = to.name.split(" ")[0];
   const price = usd(m.amount_cents);
 
+  // Matches the settle job: only mechanical abuse is charged without the recipient's say-so.
+  const mechanical = !!m.flags?.some((f) => f === "mass_blast" || f === "prompt_injection");
   const state = {
     released: {
       tone: "text-go",
       title: "Delivered. You paid nothing.",
-      text: m.trusted
+      text: m.trusted && m.verdict === "borderline"
         ? `You're a trusted sender: your earlier messages were worth it, so the ${price} hold was released at once.`
         : `The ${price} hold was released.`,
     },
-    charged: { tone: "text-stop", title: `Your ${price} went to ${to.charity}.`, text: `${first} confirmed this as spam.` },
+    charged: {
+      tone: "text-stop",
+      title: `Your ${price} went to ${to.charity}.`,
+      text: m.settled_by ? "It was sent as a mass blast or tried to trick the AI, so it was charged automatically." : `${first} confirmed this as spam.`,
+    },
     failed: { tone: "text-stop", title: "Not sent.", text: "PayPal didn't place the hold, so nothing was charged." },
     pending: { tone: "text-muted", title: "Waiting for PayPal.", text: "Approve the hold in PayPal to send the message." },
-    held:
-      m.verdict === "spam"
+    authorizing: { tone: "text-ink", title: "Placing the hold.", text: "PayPal is placing the hold. This page updates on its own." },
+    held: m.judging
+      ? { tone: "text-ink", title: "Reading your message.", text: `The ${price} hold is placed. The AI is checking whether it's worth ${first}'s time. This page updates on its own.` }
+      : m.verdict === "spam"
         ? {
             tone: "text-stop",
             title: "Flagged as spam.",
-            text: `Your ${price} is on hold. It goes to ${to.charity} unless ${first} releases it.`,
+            text: mechanical
+              ? `Your ${price} is on hold. It looks like a mass blast or an attempt to trick the AI, so it goes to ${to.charity} unless ${first} releases it.`
+              : `Your ${price} is on hold. It goes to ${to.charity} only if ${first} confirms it's spam; otherwise it's released within 3 days.`,
           }
         : {
             tone: "text-ink",
@@ -42,11 +52,23 @@ export default async function StatusPage({ params }: PageProps<"/s/[token]">) {
             text: `Your ${price} is on hold, not charged. If ${first} replies or releases it, you pay nothing.`,
           },
   }[m.status];
+  const working = m.status === "authorizing" || (m.status === "held" && !!m.judging);
   const vault: VaultState =
-    m.status === "released" ? "released" : m.status === "charged" ? "charged" : m.status === "held" ? (m.verdict === "spam" ? "spam" : "held") : "idle";
+    m.status === "released"
+      ? "released"
+      : m.status === "charged"
+        ? "charged"
+        : working
+          ? "reading"
+          : m.status === "held"
+            ? m.verdict === "spam"
+              ? "spam"
+              : "held"
+            : "idle";
 
   return (
     <>
+      {working && <meta httpEquiv="refresh" content="4" />}
       <Nav cta={false} title="Status" />
       <main className="app-main page-in gutter mx-auto grid w-full max-w-[1400px] items-start gap-8 pt-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-14 md:pb-24 md:pt-40">
         <div className="stage on-dark grid place-items-center overflow-hidden rounded-[34px] py-6 md:order-2 md:px-10 md:py-12">

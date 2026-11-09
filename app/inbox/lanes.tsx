@@ -9,7 +9,7 @@ import { usd } from "@/lib/usd";
 const LANES = [
   { title: "Your call", hint: "Still on hold. Reply or release to refund them, or charge it.", has: (m: Message) => m.verdict === "borderline" || !m.verdict },
   { title: "Worth it", hint: "The hold was released. They paid nothing.", has: (m: Message) => m.verdict === "worth_it" },
-  { title: "Spam", hint: "Flagged by the AI. Confirm the charge or let it go.", has: (m: Message) => m.verdict === "spam" },
+  { title: "Spam", hint: "Flagged by the AI. Confirm the charge or let it go. Unconfirmed spam is released after 2 days, unless it was a mass blast or tried to trick the AI.", has: (m: Message) => m.verdict === "spam" },
 ];
 
 // Desktop: a master-detail workspace (list left, the open message right). Phones: a list, with the message in a sheet.
@@ -135,7 +135,7 @@ function Detail({ m, inboxKey }: { m: Message; inboxKey: string }) {
     router.refresh();
   }
 
-  const status = { held: "on hold", released: "released", charged: "charged", pending: "pending", failed: "failed" }[m.status];
+  const status = { held: "on hold", released: "released", charged: "charged", pending: "pending", authorizing: "placing", failed: "failed" }[m.status];
   return (
     <div>
       <div className="flex items-center gap-5">
@@ -184,7 +184,7 @@ function Detail({ m, inboxKey }: { m: Message; inboxKey: string }) {
         <p className="card mt-6 p-4 leading-relaxed">You replied: {m.reply}</p>
       ) : (
         <div className="mt-6">
-          <textarea className="field min-h-24 leading-relaxed" placeholder="Reply (this releases their hold)" value={reply} onChange={(e) => setReply(e.target.value)} />
+          <textarea className="field min-h-24 leading-relaxed" placeholder={m.status === "held" ? "Reply (this releases their hold)" : "Reply"} value={reply} onChange={(e) => setReply(e.target.value)} />
           <div className="mt-3 flex flex-wrap gap-2">
             <button disabled={busy || !reply.trim()} onClick={() => act("reply")} className="btn btn-blue h-11 px-5">
               Reply

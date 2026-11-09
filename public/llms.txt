@@ -1,12 +1,12 @@
 # Toll
 
-> Toll lets anyone reach a person who has a Toll page by placing a small refundable PayPal hold on the message. An AI scores the message against what the recipient said they want. Worth it (score 70+), or replied to: the hold is voided and nobody pays. Spam: the hold is captured and goes to the recipient's chosen charity. Sandbox only.
+> Toll lets anyone reach a person who has a Toll page by placing a small refundable PayPal hold on the message. An AI scores the message against what the recipient said they want. Worth it (score 70+), or replied to: the hold is voided and nobody pays. Spam: if the recipient confirms it (or it is a detected mass blast or an attempt to manipulate the AI), the hold is captured and goes to the recipient's chosen charity; otherwise it is released within 3 days. Sandbox only.
 
 ## Agent API (no key needed; a human must approve every hold in PayPal)
 
 - GET /api/v1/tolls/{handle}: the recipient's name, wants, avoids, price and charity. Write to the `wants`; avoid the `avoids`.
 - POST /api/v1/tolls/{handle}/messages: JSON {sender_name, sender_email, subject (3-120 chars), body (40-4000 chars), agent: {name, operator}}. Returns approve_url (give it to your human) and status_url.
-- GET /api/v1/messages/{token}: status (awaiting_approval, held, released, charged, failed), verdict, score, summary, coaching, reply.
+- GET /api/v1/messages/{token}: status (awaiting_approval, processing, held, released, charged, failed). Polling also finishes a message whose human approved in PayPal but never returned to Toll, verdict, score, summary, coaching, reply.
 
 ## Rules
 
