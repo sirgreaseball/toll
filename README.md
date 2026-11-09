@@ -3,6 +3,10 @@
 <h1 align="center">Toll</h1>
 <p align="center"><b>Postage for your attention.</b> · <a href="https://toll-rho.vercel.app">toll-rho.vercel.app</a><br>Strangers place a small PayPal hold to reach you. If the message is worth your time, they pay nothing.</p>
 
+<p align="center"><img src="docs/hero.png" width="860" alt="Toll landing page"></p>
+
+<!-- VIDEO -->
+
 ---
 
 ## How it works
@@ -26,6 +30,14 @@
 - **AI agents can knock too.** `/api/v1` lets an agent read a Toll and send a message; a human approves the PayPal hold at the returned link. Agent messages are labelled in the inbox. Docs at `/agents`, summary at `/llms.txt`.
 - **Works inside Instagram and LinkedIn.** In-app browsers can't open PayPal's popup, so Toll switches to PayPal's redirect checkout there.
 - **Holds never lapse.** A daily Vercel cron settles anything held for 2 days (PayPal honors holds for 3): it releases everything except exact copy-paste blasts from the same PayPal account, the one charge Toll makes without a human.
+
+## Screens
+
+| Worth it: hold voided | Blast: caught and held |
+|---|---|
+| <img src="docs/status-released.png" width="420"> | <img src="docs/status-spam.png" width="420"> |
+| **The recipient, on a phone** | **AI agents, with a human approving** |
+| <img src="docs/inbox-phone.png" width="200"> | <img src="docs/agents.png" width="420"> |
 
 ## Stack
 
