@@ -13,13 +13,16 @@ export default function Nav({ cta = true, title }: { cta?: boolean; title?: stri
           <Link href="/#how" className="link">
             How it works
           </Link>
-          <Link href="/#proof" className="link">
-            Why it holds
+          <Link href="/agents" className="link">
+            For agents
+          </Link>
+          <Link href="/inbox" className="link">
+            Inbox
           </Link>
           {cta && (
             <span data-magnetic>
-              <Link href="/dhruv" className="btn btn-blue h-11 pl-5 pr-5 text-sm">
-                Write to Dhruv
+              <Link href="/new" className="btn btn-blue h-11 pl-5 pr-5 text-sm">
+                Make your Toll
                 <Arrow />
               </Link>
             </span>

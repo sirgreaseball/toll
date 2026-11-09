@@ -13,7 +13,7 @@ const LANES = [
 ];
 
 // Desktop: a master-detail workspace (list left, the open message right). Phones: a list, with the message in a sheet.
-export default function Lanes({ msgs, inboxKey }: { msgs: Message[]; inboxKey: string }) {
+export default function Lanes({ msgs, inboxKey, handle }: { msgs: Message[]; inboxKey: string; handle: string }) {
   const counts = LANES.map((l) => msgs.filter(l.has).length);
   const [lane, setLane] = useState(() => Math.max(0, counts.findIndex((c) => c > 0)));
   const [sel, setSel] = useState<string | null>(null);
@@ -23,14 +23,14 @@ export default function Lanes({ msgs, inboxKey }: { msgs: Message[]; inboxKey: s
 
   useEffect(() => {
     try {
-      localStorage.setItem("toll-key", inboxKey);
+      localStorage.setItem("toll-inbox", JSON.stringify({ handle, key: inboxKey }));
     } catch {}
     const mq = matchMedia("(max-width: 767px)");
     const on = () => setPhone(mq.matches);
     on();
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);
-  }, [inboxKey]);
+  }, [inboxKey, handle]);
 
   return (
     <section className="mt-8 md:mt-14">
@@ -71,6 +71,7 @@ export default function Lanes({ msgs, inboxKey }: { msgs: Message[]; inboxKey: s
                     <span className="font-bold">{m.sender_name}</span>
                     {m.payer?.verified && <span className="label text-go!">✓ PayPal</span>}
                     {m.trusted && <span className="label text-go!">Trusted</span>}
+                    {m.agent && <span className="label text-blue!">Agent</span>}
                   </span>
                   <span className="mt-0.5 block truncate text-muted">{m.subject}</span>
                 </span>
@@ -153,6 +154,13 @@ function Detail({ m, inboxKey }: { m: Message; inboxKey: string }) {
         </div>
       </div>
 
+      {(m.agent || m.settled_by) && (
+        <p className="label mt-4 text-blue!">
+          {m.agent && `Sent by AI agent ${m.agent.name}${m.agent.operator ? ` for ${m.agent.operator}` : ""}`}
+          {m.agent && m.settled_by && " · "}
+          {m.settled_by && "Settled automatically before the hold expired"}
+        </p>
+      )}
       {m.summary && <p className="mt-6 text-lg leading-relaxed">{m.summary}</p>}
       {!!m.blast_copies && (
         <p className="mt-3 text-stop">

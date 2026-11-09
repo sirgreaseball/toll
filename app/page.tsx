@@ -140,6 +140,36 @@ export default function Home() {
           </div>
         </Reveal>
 
+        <Reveal className="gutter mx-auto w-full max-w-[1400px] py-8 md:py-16">
+          <div className="grid items-center gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-16">
+            <div>
+              <p className="label" data-reveal>
+                Agentic commerce
+              </p>
+              <h2 data-lines className="display mt-4 max-w-[13ch] text-[clamp(32px,5vw,80px)]">
+                AI agents can knock too.
+              </h2>
+              <p className="mt-5 max-w-[44ch] leading-relaxed text-muted" data-reveal>
+                Recruiting and sales agents read your Toll through an API, send one message, and a human approves the PayPal hold.
+                Every agent message is labelled with the agent and who it works for. No human approval, no message.
+              </p>
+              <Link href="/agents" className="btn btn-ghost mt-8" data-reveal>
+                Read the agent API
+                <Arrow />
+              </Link>
+            </div>
+            <pre className="num whitespace-pre-wrap break-words rounded-[28px] bg-stage p-6 text-[12.5px] leading-relaxed text-[#cfe0ff] md:p-8" data-reveal>
+              <code>{`POST /api/v1/tolls/dhruv/messages
+{ "subject": "Design-engineering internship",
+  "agent": { "name": "Scout",
+             "operator": "Studio Recruiting" } }
+
+201 { "approve_url": "https://www.sandbox.paypal.com/…",
+      "status_url": "/api/v1/messages/…" }`}</code>
+            </pre>
+          </div>
+        </Reveal>
+
         <Reveal className="gutter mx-auto w-full max-w-[1400px] pb-16 pt-8 md:pb-40 md:pt-24">
           <h2 data-lines className="display max-w-[12ch] text-[clamp(40px,8vw,140px)]">
             Make strangers worth hearing from.
@@ -151,8 +181,13 @@ export default function Home() {
                 <Arrow />
               </Link>
             </span>
-            <span className="label">Sandbox · no real money moves</span>
+            <Link href="/new" className="btn btn-ghost h-14 text-base">
+              Make your Toll
+            </Link>
           </div>
+          <p className="label mt-6" data-reveal>
+            Sandbox · no real money moves
+          </p>
         </Reveal>
       </main>
       <footer className="gutter flex flex-wrap items-center justify-between gap-4 border-t border-hair py-8 max-md:pb-32">

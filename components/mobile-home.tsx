@@ -66,6 +66,9 @@ export default function MobileHome() {
             <Arrow />
           </Link>
         </div>
+        <Link href="/new" className="btn btn-ghost mt-3 w-full">
+          Make your own Toll
+        </Link>
         <p className="label mt-3 text-center">Sandbox · no real money moves</p>
       </section>
 

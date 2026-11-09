@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { asMessage, messages } from "@/lib/db";
+import { asMessage, messages, openInbox } from "@/lib/db";
 import { chargeHold, releaseHold } from "@/lib/paypal";
 
 const Body = z.object({
@@ -13,17 +13,16 @@ const Body = z.object({
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const parsed = Body.safeParse(await req.json().catch(() => null));
-  // ponytail: one shared inbox key for the demo profile; Firebase Auth replaces it in M2.
-  if (!parsed.success || !process.env.INBOX_KEY || parsed.data.key !== process.env.INBOX_KEY) {
-    return NextResponse.json({ error: "Not allowed." }, { status: 401 });
-  }
-  const { action, reply } = parsed.data;
+  if (!parsed.success) return NextResponse.json({ error: "Not allowed." }, { status: 401 });
+  const { action, reply, key } = parsed.data;
   if (action === "reply" && !reply) return NextResponse.json({ error: "Write a reply first." }, { status: 400 });
 
   const ref = messages().doc(id);
   const snap = await ref.get();
   if (!snap.exists) return NextResponse.json({ error: "Message not found." }, { status: 404 });
   const msg = asMessage(snap);
+  // Only the owner of the page the message was sent to may act on it.
+  if (!(await openInbox(msg.profile_handle, key))) return NextResponse.json({ error: "Not allowed." }, { status: 401 });
 
   const update: Record<string, unknown> = action === "reply" ? { reply } : {};
   if (msg.status === "held" && msg.authorization_id) {

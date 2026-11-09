@@ -40,10 +40,10 @@ const TABS = [
 // Phones only. A native-style tab bar: glass, safe-area aware, with a pill that slides to the active tab.
 export default function TabBar() {
   const path = usePathname();
-  const active = Math.max(0, TABS.findIndex((t) => t.match(path)));
+  const active = TABS.findIndex((t) => t.match(path)); // -1 on pages outside the three tabs: no tab is lit
   return (
     <nav className="tabbar md:hidden" aria-label="Main">
-      <span className="tab-pill" aria-hidden="true" style={{ transform: `translateX(${active * 100}%)` }} />
+      <span className="tab-pill" aria-hidden="true" style={{ transform: `translateX(${Math.max(0, active) * 100}%)`, opacity: active < 0 ? 0 : 1 }} />
       {TABS.map((t, i) => (
         <Link key={t.href} href={t.href} className="tab" aria-current={i === active ? "page" : undefined} prefetch>
           {t.icon}

@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import type { Payer } from "./paypal";
@@ -36,7 +36,34 @@ export type Profile = {
   avoids: string;
   price_cents: number;
   charity: string;
+  key_hash?: string; // sha256 of the private inbox key; the key itself is shown once and never stored
+  created_at?: string;
 };
+
+const sha = (s: string) => createHash("sha256").update(s).digest();
+export const hashKey = (key: string) => sha(key).toString("hex");
+
+// The inbox opens with the profile's own private key. The demo page also accepts the shared INBOX_KEY.
+export async function openInbox(handle: string, key: string) {
+  const snap = await profiles().doc(handle.toLowerCase()).get();
+  if (!snap.exists || !key) return null;
+  const p = asProfile(snap);
+  const same = (a: Buffer, b: Buffer) => a.length === b.length && timingSafeEqual(a, b);
+  const own = !!p.key_hash && same(sha(key), Buffer.from(p.key_hash, "hex"));
+  const demo = p.handle === (process.env.DEMO_HANDLE ?? "dhruv") && !!process.env.INBOX_KEY && same(sha(key), sha(process.env.INBOX_KEY));
+  return own || demo ? p : null;
+}
+
+// What anyone (a browser or an AI agent) may see about a Toll page.
+export const publicProfile = ({ handle, name, headline, wants, avoids, price_cents, charity }: Profile) => ({
+  handle,
+  name,
+  headline,
+  wants,
+  avoids,
+  price_cents,
+  charity,
+});
 
 export type Message = {
   id: string;
@@ -63,6 +90,8 @@ export type Message = {
   pitch?: string; // the judge's neutral one-line offer, compared across pages to catch reworded blasts
   embedding?: number[];
   embedding_model?: string;
+  agent?: { name: string; operator?: string }; // sent through the agent API on behalf of a person or company
+  settled_by?: "auto"; // the daily job settled it before PayPal's 3-day honor period ran out
   judge_model?: string;
   status_token: string;
   created_at: string;
@@ -72,3 +101,6 @@ export type Message = {
 type Snap = { id: string; data(): unknown };
 export const asProfile = (s: Snap) => ({ ...(s.data() as object), handle: s.id }) as Profile;
 export const asMessage = (s: Snap) => ({ ...(s.data() as object), id: s.id }) as Message;
+
+// Charities a page owner can pick; spam holds are charged to the one they chose.
+export const CHARITIES = ["GiveDirectly", "Khan Academy", "Wikimedia Foundation", "Doctors Without Borders", "charity: water"] as const;

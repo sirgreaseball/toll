@@ -1,23 +1,21 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import Nav from "@/components/nav";
-import { asMessage, asProfile, messages, profiles } from "@/lib/db";
+import { asMessage, messages, openInbox } from "@/lib/db";
 import { usd } from "@/lib/usd";
 import KeyGate from "./gate";
 import Lanes from "./lanes";
 
 export const instant = false; // every request reads the database
 
-// ponytail: demo inbox behind one shared key (?key=INBOX_KEY); Firebase Auth replaces it in M2.
+// Each page owner opens their inbox with the private key they got when they made the page.
+// ponytail: a bearer key in the URL instead of accounts; swap for Firebase Auth when people need to log in on new devices.
 export default async function Inbox({ searchParams }: PageProps<"/inbox">) {
   await connection(); // Firestore reads happen per request, never at prerender
-  const { key } = await searchParams;
-  if (key === undefined) return <KeyGate />;
-  if (typeof key !== "string" || !process.env.INBOX_KEY || key !== process.env.INBOX_KEY) notFound();
-
-  const snap = await profiles().doc(process.env.DEMO_HANDLE ?? "dhruv").get();
-  if (!snap.exists) notFound();
-  const p = asProfile(snap);
+  const { key, handle } = await searchParams;
+  if (typeof key !== "string") return <KeyGate />;
+  const p = await openInbox(typeof handle === "string" ? handle : (process.env.DEMO_HANDLE ?? "dhruv"), key);
+  if (!p) notFound();
   // ponytail: filters and sorts in memory to avoid a composite index; fine for one inbox.
   const all = await messages().where("profile_handle", "==", p.handle).get();
   const msgs = all.docs
@@ -46,7 +44,7 @@ export default async function Inbox({ searchParams }: PageProps<"/inbox">) {
             </div>
           ))}
         </div>
-        <Lanes msgs={msgs} inboxKey={key} />
+        <Lanes msgs={msgs} inboxKey={key} handle={p.handle} />
       </main>
     </>
   );

@@ -23,7 +23,7 @@ const schema: Record<string, unknown> = z.toJSONSchema(Output);
 delete schema.$schema;
 
 export type Recipient = { name: string; headline: string | null; wants: string; avoids: string; price_cents: number };
-export type Incoming = { sender_name: string; subject: string; body: string };
+export type Incoming = { sender_name: string; subject: string; body: string; agent?: { name: string; operator?: string } };
 export type Verdict = z.infer<typeof Output> & { verdict: "worth_it" | "borderline" | "spam"; model: string };
 
 // Gemini free-tier models, tried in order. Each model has its own small daily quota (about 20 requests),
@@ -124,8 +124,10 @@ export async function judge(r: Recipient, m: Incoming): Promise<Verdict> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY missing");
   const body = m.body.replaceAll("</message", "< /message");
+  // Agent-sent messages say so: the recipient asked for people, so the judge should weigh who is really behind it.
+  const via = m.agent ? ` (sent by the AI agent "${m.agent.name}"${m.agent.operator ? ` on behalf of ${m.agent.operator}` : ""})` : "";
   const res = await generate(apiKey, {
-    contents: `<message>\nFrom: ${m.sender_name}\nSubject: ${m.subject}\n\n${body}\n</message>`,
+    contents: `<message>\nFrom: ${m.sender_name}${via}\nSubject: ${m.subject}\n\n${body}\n</message>`,
     config: {
       systemInstruction: system(r),
       responseMimeType: "application/json",

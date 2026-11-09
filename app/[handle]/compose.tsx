@@ -2,7 +2,7 @@
 
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Vault from "@/components/vault";
 
 const empty = { sender_name: "", sender_email: "", subject: "", body: "" };
@@ -36,6 +36,28 @@ export default function Compose({
     setForm({ ...form, [k]: e.target.value });
     setError("");
   };
+
+  // Instagram, LinkedIn, TikTok and friends open links in webviews where PayPal's popup can't open,
+  // so there the sender goes to PayPal's own page and comes back to /r.
+  const [inApp, setInApp] = useState(false);
+  useEffect(() => setInApp(/Instagram|FBAN|FBAV|LinkedInApp|Twitter|TikTok|musical_ly|Snapchat|Line\/|wv\)/i.test(navigator.userAgent)), []);
+  const [leaving, setLeaving] = useState(false);
+  async function onPayPalSite() {
+    if (!ready) return setError("Fill in every field. The message needs at least 40 characters.");
+    setLeaving(true);
+    setError("");
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ handle, ...form, redirect: true }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.approveUrl) {
+      setLeaving(false);
+      return setError(data.error ?? "PayPal is unavailable right now. Try again in a minute.");
+    }
+    window.location.href = data.approveUrl;
+  }
 
   if (judging) {
     return (
@@ -83,8 +105,13 @@ export default function Compose({
         />
       </label>
 
+      {inApp && (
+        <button onClick={onPayPalSite} disabled={leaving} className={`btn mt-6 w-full bg-[#ffc439] text-[#003087] ${ready ? "" : "opacity-45"}`}>
+          {leaving ? "Opening PayPal…" : "Continue to PayPal"}
+        </button>
+      )}
       {/* PayPal's own disabled state paints a grey box, so the button is gated by a clear cover instead. */}
-      <div className={`relative mt-6 transition-opacity duration-300 ${ready ? "" : "opacity-45"}`}>
+      <div className={`relative mt-6 transition-opacity duration-300 ${ready ? "" : "opacity-45"} ${inApp ? "hidden" : ""}`}>
         {!ready && (
           <button
             type="button"
@@ -129,6 +156,11 @@ export default function Compose({
         </PayPalScriptProvider>
       </div>
       <p className="label mt-4 text-center">{ready ? `Hold ${price} · released if it's worth it` : "Fill in every field to continue"}</p>
+      {ready && !inApp && (
+        <button onClick={onPayPalSite} disabled={leaving} className="link mt-2 block w-full text-center text-sm underline underline-offset-4">
+          {leaving ? "Opening PayPal…" : "PayPal window not opening? Continue on PayPal's site"}
+        </button>
+      )}
       {error && (
         <p className="mt-3 text-center text-sm text-stop" role="alert">
           {error}

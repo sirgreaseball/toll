@@ -38,7 +38,14 @@ export async function post(path: string, requestId: string, body?: unknown) {
   return data;
 }
 
-export async function createHoldOrder(amountCents: number, description: string, messageId: string) {
+// With `redirect`, the payer approves on PayPal's own page and comes back to returnUrl (?token=<order id>).
+// That path works where popups don't: in-app browsers, and links handed to a human by an AI agent.
+export async function createHoldOrder(
+  amountCents: number,
+  description: string,
+  messageId: string,
+  redirect?: { returnUrl: string; cancelUrl: string },
+) {
   const order = await post("/v2/checkout/orders", `order-${messageId}`, {
     intent: "AUTHORIZE",
     purchase_units: [
@@ -48,8 +55,22 @@ export async function createHoldOrder(amountCents: number, description: string, 
         amount: { currency_code: "USD", value: (amountCents / 100).toFixed(2) },
       },
     ],
+    ...(redirect && {
+      payment_source: {
+        paypal: {
+          experience_context: {
+            brand_name: "Toll",
+            shipping_preference: "NO_SHIPPING",
+            user_action: "CONTINUE",
+            return_url: redirect.returnUrl,
+            cancel_url: redirect.cancelUrl,
+          },
+        },
+      },
+    }),
   });
-  return order.id as string;
+  const approveUrl = (order.links as { rel: string; href: string }[] | undefined)?.find((l) => l.rel === "payer-action" || l.rel === "approve")?.href;
+  return { id: order.id as string, approveUrl };
 }
 
 // Who paid, as PayPal knows them. `verified` means PayPal has verified the account.

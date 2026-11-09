@@ -205,7 +205,9 @@ export default function Story() {
                         <Arrow />
                       </Link>
                     </span>
-                    <span className="label">Sandbox · no real money moves</span>
+                    <Link href="/new" className="btn text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.3)]">
+                      Make your own
+                    </Link>
                   </div>
                 </div>
                 {BEATS.map((b, i) => (

@@ -1,23 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Nav from "@/components/nav";
 
-// The inbox is private. The key is remembered on this device so the Inbox tab opens straight in.
+const open = (handle: string, key: string) => `/inbox?handle=${encodeURIComponent(handle)}&key=${encodeURIComponent(key)}`;
+
+// The inbox is private. The handle and key are remembered on this device so the Inbox tab opens straight in.
 export default function KeyGate() {
   const router = useRouter();
+  const [handle, setHandle] = useState("");
   const [key, setKey] = useState("");
-  const open = (k: string) => {
-    try {
-      localStorage.setItem("toll-key", k);
-    } catch {}
-    router.push(`/inbox?key=${encodeURIComponent(k)}`);
-  };
   useEffect(() => {
     try {
-      const k = localStorage.getItem("toll-key");
-      if (k) router.replace(`/inbox?key=${encodeURIComponent(k)}`);
+      const saved = JSON.parse(localStorage.getItem("toll-inbox") ?? "null");
+      if (saved?.handle && saved?.key) router.replace(open(saved.handle, saved.key));
     } catch {}
   }, [router]);
 
@@ -27,19 +25,26 @@ export default function KeyGate() {
       <main className="app-main page-in gutter mx-auto w-full max-w-[560px] pt-8 md:pt-48">
         <p className="label">Private</p>
         <h1 className="display mt-4 text-[clamp(40px,6vw,72px)]">Your inbox is locked.</h1>
-        <p className="mt-4 text-muted">Enter the inbox key to read what strangers sent you.</p>
+        <p className="mt-4 text-muted">Open it with the private inbox link you saved when you made your Toll, or enter your handle and key.</p>
         <form
           className="mt-8 grid gap-3"
           onSubmit={(e) => {
             e.preventDefault();
-            if (key.trim()) open(key.trim());
+            router.push(open(handle.trim().toLowerCase(), key.trim()));
           }}
         >
-          <input className="field" type="password" autoComplete="off" autoCapitalize="none" enterKeyHint="go" placeholder="Inbox key" value={key} onChange={(e) => setKey(e.target.value)} />
-          <button className="btn btn-blue" disabled={!key.trim()}>
+          <input className="field" autoComplete="username" autoCapitalize="none" placeholder="Handle" value={handle} onChange={(e) => setHandle(e.target.value)} />
+          <input className="field" type="password" autoComplete="current-password" autoCapitalize="none" enterKeyHint="go" placeholder="Inbox key" value={key} onChange={(e) => setKey(e.target.value)} />
+          <button className="btn btn-blue" disabled={!handle.trim() || !key.trim()}>
             Open inbox
           </button>
         </form>
+        <p className="mt-8 text-muted">
+          No Toll yet?{" "}
+          <Link href="/new" className="font-bold text-blue">
+            Make one in a minute
+          </Link>
+        </p>
       </main>
     </>
   );
