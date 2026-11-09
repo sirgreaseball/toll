@@ -73,3 +73,9 @@ Next.js 16 (App Router, TypeScript, Tailwind 4) on Vercel, Firebase Firestore (s
 - Verified on a local production build: signup, duplicate and reserved handles rejected, inbox opens only with the right key, agent GET/POST/poll, redirect order returns an approval link, settle rejects without the secret. Deployed and the live routes return 200.
 - Not verified: a full redirect checkout approved in PayPal and the cron's first real run.
 - Submission kit: [SUBMISSION.md](SUBMISSION.md).
+
+## Status (Nov 10)
+
+- Two code reviews (high, then max) found 25 issues; all fixed and deployed. Recorded real sandbox flows for the demo video (worth it 95 released, blast 5 charged, agent 95 released).
+- Demo video: https://youtu.be/uhGFZcTyey8 (public, 2:33, built with Remotion in ../toll-video from screen captures of the live site; original generated audio).
+- Devpost draft filled: story, links, tech tags, video, 6 gallery images, testing steps. Left for Dhruv: personal/eligibility answers, terms checkbox, Submit, and making this repo public.
